@@ -1,0 +1,4 @@
+interface:
+  display_name: "Calendar Bridge"
+  short_description: "Cross-calendar conversion and integration workflows"
+  default_prompt: "Use $calendar-bridge to normalize timestamps and convert projected dates across calendars with stable JSON."

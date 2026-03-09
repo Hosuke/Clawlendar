@@ -1,0 +1,6 @@
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.30.0,<1.0.0
+
+# Optional calendar providers
+lunardate>=0.2.2
+convertdate>=2.4.0
