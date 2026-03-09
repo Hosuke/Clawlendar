@@ -9,10 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-try:
-    from . import calendar_bridge as bridge
-except ImportError:
-    import calendar_bridge as bridge  # type: ignore
+from clawlender import bridge
 
 
 app = FastAPI(

@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clawlender"
+version = "0.1.0"
+description = "Timestamp-first perpetual calendar interop for AI agents — MCP server for cross-calendar conversion across East/West calendar systems."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Hosuke"},
+]
+keywords = [
+    "mcp",
+    "calendar",
+    "ai-agent",
+    "timestamp",
+    "gregorian",
+    "minguo",
+    "japanese-era",
+    "lunar-calendar",
+    "solar-terms",
+    "model-context-protocol",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "mcp>=1.0.0",
+]
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.115.0,<1.0.0",
+    "uvicorn[standard]>=0.30.0,<1.0.0",
+]
+lunar = [
+    "lunardate>=0.2.2",
+]
+extra-calendars = [
+    "convertdate>=2.4.0",
+]
+all = [
+    "clawlender[api,lunar,extra-calendars]",
+]
+
+[project.scripts]
+clawlender = "clawlender.server:main"
+
+[project.urls]
+Homepage = "https://github.com/Hosuke/Clawlender"
+Repository = "https://github.com/Hosuke/Clawlender"
+Issues = "https://github.com/Hosuke/Clawlender/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]

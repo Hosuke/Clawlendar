@@ -1,0 +1,13 @@
+LICENSE
+README.md
+pyproject.toml
+src/clawlender/__init__.py
+src/clawlender/__main__.py
+src/clawlender/bridge.py
+src/clawlender/server.py
+src/clawlender.egg-info/PKG-INFO
+src/clawlender.egg-info/SOURCES.txt
+src/clawlender.egg-info/dependency_links.txt
+src/clawlender.egg-info/entry_points.txt
+src/clawlender.egg-info/requires.txt
+src/clawlender.egg-info/top_level.txt

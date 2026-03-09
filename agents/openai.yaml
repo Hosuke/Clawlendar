@@ -1,4 +1,4 @@
 interface:
-  display_name: "Calendar Bridge"
-  short_description: "Cross-calendar conversion and integration workflows"
-  default_prompt: "Use $calendar-bridge to normalize timestamps and convert projected dates across calendars with stable JSON."
+  display_name: "Clawlender"
+  short_description: "Timestamp-first perpetual calendar interop for AI agents"
+  default_prompt: "Use $clawlender to normalize timestamps and convert projected dates across calendars with stable JSON."

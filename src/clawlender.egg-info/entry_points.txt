@@ -1,0 +1,2 @@
+[console_scripts]
+clawlender = clawlender.server:main

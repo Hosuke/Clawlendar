@@ -1,9 +1,9 @@
 ---
-name: calendar-bridge
-description: Cross-calendar conversion and interoperability skill for Gregorian, Julian, ISO week, ROC (Minguo), Buddhist Era, Japanese era, and optional Chinese lunar/Islamic/Hebrew/Persian calendars. Use when Codex needs to normalize dates across systems, answer calendar questions (including East Asian context like lunisolar and solar terms), or provide a stable JSON contract that many agents/tools can integrate.
+name: clawlender
+description: Timestamp-first perpetual calendar interop for AI agents. Cross-calendar conversion for Gregorian, Julian, ISO week, ROC (Minguo), Buddhist Era, Japanese era, sexagenary, solar terms, and optional Chinese lunar/Islamic/Hebrew/Persian calendars. Use when agents need to normalize dates across systems, answer calendar questions (including East Asian context), or provide a stable JSON contract for multi-tool integration.
 ---
 
-# Calendar Bridge
+# Clawlender
 
 ## Overview
 
@@ -17,11 +17,28 @@ Provide a single, agent-friendly bridge layer so different tools can ask calenda
 4. Project canonical date into each target calendar.
 5. Return JSON with conversion results, warnings, and unconvertible targets.
 
-## Quick Start
+## Quick Start (MCP Server)
+
+Install and run as an MCP server for Claude Desktop / Claude Code:
+
+```bash
+pip install clawlender
+clawlender
+```
+
+Or run directly from source:
+
+```bash
+pip install -e .
+python -m clawlender.server
+```
+
+## CLI Usage
 
 List supported calendars and optional backends:
 
 ```bash
+pip install -e .
 python3 scripts/calendar_bridge.py capabilities
 ```
 
@@ -34,15 +51,6 @@ python3 scripts/calendar_bridge.py convert \
   --date-json '{"year": 2026, "month": 3, "day": 9}'
 ```
 
-Convert from Chinese lunar (when `lunardate` is available):
-
-```bash
-python3 scripts/calendar_bridge.py convert \
-  --source chinese_lunar \
-  --targets gregorian,iso_week \
-  --date-json '{"lunar_year": 2026, "lunar_month": 1, "lunar_day": 1, "is_leap_month": false}'
-```
-
 Normalize one instant with timestamp-first model (external time wheel):
 
 ```bash
@@ -53,24 +61,20 @@ python3 scripts/calendar_bridge.py timeline \
   --targets minguo,japanese_era,sexagenary,solar_term_24
 ```
 
+## HTTP API
+
 Run HTTP API for multi-claw integration:
 
 ```bash
-pip install -r requirements.txt
+pip install -e ".[api]"
 ./scripts/run_api.sh
-```
-
-Smoke test the HTTP API with curl:
-
-```bash
-./scripts/curl_examples.sh
 ```
 
 Run with Docker:
 
 ```bash
-docker build -t calendar-bridge:mvp .
-docker run --rm -p 8000:8000 calendar-bridge:mvp
+docker build -t clawlender:mvp .
+docker run --rm -p 8000:8000 clawlender:mvp
 ```
 
 ## Contract
