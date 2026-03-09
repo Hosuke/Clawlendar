@@ -47,7 +47,8 @@ Alternative options:
 ## Quick Start
 
 ```bash
-cd calendar-bridge
+git clone git@github.com:Hosuke/Clawlender.git
+cd Clawlender
 pip install -r requirements.txt
 ./scripts/run_api.sh
 ```
