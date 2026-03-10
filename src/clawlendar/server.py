@@ -1,4 +1,4 @@
-"""Clawlender MCP Server.
+"""Clawlendar MCP Server.
 
 Exposes calendar conversion, timeline projection, and capability discovery
 as MCP tools for Claude Desktop, Claude Code, and other MCP clients.
@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from mcp.server.fastmcp import FastMCP
 
-from .bridge import (
+from clawlendar.bridge import (
     CalendarError,
     make_registry,
     run_capabilities,
@@ -20,7 +20,7 @@ from .bridge import (
 )
 
 mcp = FastMCP(
-    "Clawlender",
+    "Clawlendar",
     json_response=True,
 )
 

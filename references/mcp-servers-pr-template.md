@@ -1,4 +1,4 @@
-# How to submit Clawlender to the MCP Server Directory
+# How to submit Clawlendar to the MCP Server Directory
 
 ## Step 1: Fork and clone the MCP servers repo
 
@@ -8,41 +8,41 @@ git clone https://github.com/<your-username>/servers.git
 cd servers
 ```
 
-## Step 2: Add Clawlender entry
+## Step 2: Add Clawlendar entry
 
 Edit `README.md` in the servers repo. Find the appropriate section
 (likely "Community Servers" or a similar table) and add:
 
 ```markdown
-### Clawlender
+### Clawlendar
 
 Timestamp-first perpetual calendar interop for AI agents. Converts dates across
 Gregorian, Julian, ISO week, Minguo, Japanese era, Buddhist, sexagenary, solar
 terms, Chinese lunar, Islamic, Hebrew, and Persian calendars.
 
-- **Repository**: https://github.com/Hosuke/Clawlender
-- **Install**: `pip install clawlender`
+- **Repository**: https://github.com/Hosuke/Clawlendar
+- **Install**: `pip install clawlendar`
 - **Tools**: `capabilities`, `convert`, `timeline`
 ```
 
 ## Step 3: Create the PR
 
 ```bash
-git checkout -b add-clawlender
+git checkout -b add-clawlendar
 git add README.md
-git commit -m "Add Clawlender: timestamp-first calendar interop MCP server"
-git push origin add-clawlender
+git commit -m "Add Clawlendar: timestamp-first calendar interop MCP server"
+git push origin add-clawlendar
 ```
 
 Then open a PR on GitHub with this description:
 
 ---
 
-**Title**: Add Clawlender — Timestamp-first calendar interop MCP server
+**Title**: Add Clawlendar — Timestamp-first calendar interop MCP server
 
 **Description**:
 
-Clawlender is a Python MCP server that provides cross-calendar conversion and
+Clawlendar is a Python MCP server that provides cross-calendar conversion and
 timestamp-first timeline projection for AI agents.
 
 **What it does:**
@@ -55,23 +55,23 @@ timestamp-first timeline projection for AI agents.
 
 **Install:**
 ```bash
-pip install clawlender
+pip install clawlendar
 ```
 
 **Claude Desktop config:**
 ```json
 {
   "mcpServers": {
-    "clawlender": {
-      "command": "clawlender"
+    "clawlendar": {
+      "command": "clawlendar"
     }
   }
 }
 ```
 
 **Links:**
-- PyPI: https://pypi.org/project/clawlender/
-- GitHub: https://github.com/Hosuke/Clawlender
+- PyPI: https://pypi.org/project/clawlendar/
+- GitHub: https://github.com/Hosuke/Clawlendar
 
 ---
 
@@ -80,7 +80,7 @@ pip install clawlender
 Make sure you have already:
 
 1. Published to PyPI (see below)
-2. Tested that `pip install clawlender && clawlender` works
+2. Tested that `pip install clawlendar && clawlendar` works
 3. Verified Claude Desktop can connect to the server
 
 ## Publishing to PyPI
@@ -90,7 +90,7 @@ Make sure you have already:
 pip install build twine
 
 # Build the package
-cd /path/to/Clawlender
+cd /path/to/Clawlendar
 python -m build
 
 # Upload to Test PyPI first (optional but recommended)

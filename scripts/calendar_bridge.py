@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Calendar Bridge CLI.
 
-Thin CLI wrapper — core logic lives in clawlender.bridge.
+Thin CLI wrapper — core logic lives in clawlendar.bridge.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ import argparse
 import json
 import sys
 
-from clawlender.bridge import (
+from clawlendar.bridge import (
     CalendarError,
     make_registry,
     normalize_targets,

@@ -1,9 +1,9 @@
 ---
-name: clawlender
+name: clawlendar
 description: Timestamp-first perpetual calendar interop for AI agents. Cross-calendar conversion for Gregorian, Julian, ISO week, ROC (Minguo), Buddhist Era, Japanese era, sexagenary, solar terms, and optional Chinese lunar/Islamic/Hebrew/Persian calendars. Use when agents need to normalize dates across systems, answer calendar questions (including East Asian context), or provide a stable JSON contract for multi-tool integration.
 ---
 
-# Clawlender
+# Clawlendar
 
 ## Overview
 
@@ -22,15 +22,15 @@ Provide a single, agent-friendly bridge layer so different tools can ask calenda
 Install and run as an MCP server for Claude Desktop / Claude Code:
 
 ```bash
-pip install clawlender
-clawlender
+pip install clawlendar
+clawlendar
 ```
 
 Or run directly from source:
 
 ```bash
 pip install -e .
-python -m clawlender.server
+python -m clawlendar.server
 ```
 
 ## CLI Usage
@@ -73,8 +73,8 @@ pip install -e ".[api]"
 Run with Docker:
 
 ```bash
-docker build -t clawlender:mvp .
-docker run --rm -p 8000:8000 clawlender:mvp
+docker build -t clawlendar:mvp .
+docker run --rm -p 8000:8000 clawlendar:mvp
 ```
 
 ## Contract

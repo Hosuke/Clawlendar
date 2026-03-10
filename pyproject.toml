@@ -3,8 +3,8 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "clawlender"
-version = "0.1.0"
+name = "clawlendar"
+version = "0.1.1"
 description = "Timestamp-first perpetual calendar interop for AI agents — MCP server for cross-calendar conversion across East/West calendar systems."
 readme = "README.md"
 license = "MIT"
@@ -51,11 +51,11 @@ extra-calendars = [
     "convertdate>=2.4.0",
 ]
 all = [
-    "clawlender[api,lunar,extra-calendars]",
+    "clawlendar[api,lunar,extra-calendars]",
 ]
 
 [project.scripts]
-clawlender = "clawlender.server:main"
+clawlendar = "clawlendar.server:main"
 
 [project.urls]
 Homepage = "https://github.com/Hosuke/Clawlender"

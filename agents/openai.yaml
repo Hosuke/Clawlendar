@@ -1,4 +1,4 @@
 interface:
-  display_name: "Clawlender"
+  display_name: "Clawlendar"
   short_description: "Timestamp-first perpetual calendar interop for AI agents"
-  default_prompt: "Use $clawlender to normalize timestamps and convert projected dates across calendars with stable JSON."
+  default_prompt: "Use $clawlendar to normalize timestamps and convert projected dates across calendars with stable JSON."

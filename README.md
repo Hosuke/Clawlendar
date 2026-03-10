@@ -1,10 +1,10 @@
-# Clawlender
+# Clawlendar
 
 **Timestamp-first perpetual calendar interop for AI agents.**
 
-> Clawlender = **Claw** (AI agent) + **Calendar**
+> Clawlendar = **Claw** (AI agent) + **Calendar**
 
-Clawlender helps agents speak the same time language across systems, regions, and calendar traditions.
+Clawlendar helps agents speak the same time language across systems, regions, and calendar traditions.
 It normalizes an instant first (Unix timestamp), then projects to multiple calendars with a stable JSON contract.
 
 Available as an **MCP server** (for Claude Desktop / Claude Code), a **FastAPI HTTP service**, and a **CLI tool**.
@@ -14,14 +14,14 @@ Available as an **MCP server** (for Claude Desktop / Claude Code), a **FastAPI H
 ### From PyPI
 
 ```bash
-pip install clawlender
+pip install clawlendar
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/Hosuke/Clawlender.git
-cd Clawlender
+git clone https://github.com/Hosuke/Clawlendar.git
+cd Clawlendar
 pip install -e .
 ```
 
@@ -32,8 +32,8 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "clawlender": {
-      "command": "clawlender"
+    "clawlendar": {
+      "command": "clawlendar"
     }
   }
 }
@@ -46,7 +46,7 @@ Config file location:
 ### Claude Code
 
 ```bash
-claude mcp add clawlender -- clawlender
+claude mcp add clawlendar -- clawlendar
 ```
 
 ## MCP Tools
@@ -74,9 +74,9 @@ Once connected, Claude has access to three tools:
 ### Optional (install extras)
 
 ```bash
-pip install clawlender[all]       # all optional calendars
-pip install clawlender[lunar]     # Chinese lunar only
-pip install clawlender[extra-calendars]  # Islamic, Hebrew, Persian
+pip install clawlendar[all]       # all optional calendars
+pip install clawlendar[lunar]     # Chinese lunar only
+pip install clawlendar[extra-calendars]  # Islamic, Hebrew, Persian
 ```
 
 - `chinese_lunar` — via `lunardate`
@@ -130,8 +130,8 @@ curl -sS -X POST http://127.0.0.1:8000/convert \
 ## Docker
 
 ```bash
-docker build -t clawlender:mvp .
-docker run --rm -p 8000:8000 clawlender:mvp
+docker build -t clawlendar:mvp .
+docker run --rm -p 8000:8000 clawlendar:mvp
 ```
 
 ## Architecture
@@ -145,7 +145,7 @@ docker run --rm -p 8000:8000 clawlender:mvp
 ## Repository Structure
 
 ```
-src/clawlender/
+src/clawlendar/
   __init__.py            # package version
   bridge.py              # core calendar conversion engine
   server.py              # MCP server entry point
@@ -177,14 +177,14 @@ references/
 
 ## 中文说明
 
-Clawlender 是一个给 AI agents 用的「时间与历法互通层」，同时也是一个 **MCP Server**（可直接接入 Claude Desktop / Claude Code）。
+Clawlendar 是一个给 AI agents 用的「时间与历法互通层」，同时也是一个 **MCP Server**（可直接接入 Claude Desktop / Claude Code）。
 
 核心做法是先用时间戳统一「绝对时间」，再投影到不同时区与历法，输出稳定 JSON，方便多工具接入。
 
 ### 安装
 
 ```bash
-pip install clawlender
+pip install clawlendar
 ```
 
 在 Claude Desktop 的 `claude_desktop_config.json` 中加入：
@@ -192,8 +192,8 @@ pip install clawlender
 ```json
 {
   "mcpServers": {
-    "clawlender": {
-      "command": "clawlender"
+    "clawlendar": {
+      "command": "clawlendar"
     }
   }
 }
