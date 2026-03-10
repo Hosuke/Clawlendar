@@ -451,6 +451,491 @@ def localize_calendar_payload(target: str, payload: Dict[str, Any], locale_tag: 
         return localize_solar_term_payload(payload, locale_tag)
     return payload
 
+
+ZH_STEM_TO_KEY = {value: key for key, value in HEAVENLY_STEM_ZH_LABELS.items()}
+ZH_BRANCH_TO_KEY = {value: key for key, value in EARTHLY_BRANCH_ZH_LABELS.items()}
+
+CHINESE_ZODIAC_ANIMAL_BY_BRANCH = {
+    "zi": {"en": "rat", "zh_hans": "鼠", "zh_hant": "鼠"},
+    "chou": {"en": "ox", "zh_hans": "牛", "zh_hant": "牛"},
+    "yin": {"en": "tiger", "zh_hans": "虎", "zh_hant": "虎"},
+    "mao": {"en": "rabbit", "zh_hans": "兔", "zh_hant": "兔"},
+    "chen": {"en": "dragon", "zh_hans": "龙", "zh_hant": "龍"},
+    "si": {"en": "snake", "zh_hans": "蛇", "zh_hant": "蛇"},
+    "wu": {"en": "horse", "zh_hans": "马", "zh_hant": "馬"},
+    "wei": {"en": "goat", "zh_hans": "羊", "zh_hant": "羊"},
+    "shen": {"en": "monkey", "zh_hans": "猴", "zh_hant": "猴"},
+    "you": {"en": "rooster", "zh_hans": "鸡", "zh_hant": "雞"},
+    "xu": {"en": "dog", "zh_hans": "狗", "zh_hant": "狗"},
+    "hai": {"en": "pig", "zh_hans": "猪", "zh_hant": "豬"},
+}
+
+MONTH_BOUNDARY_TERMS = [
+    ("minor_cold", 1, 5, 11, 1),  # chou
+    ("start_of_spring", 2, 4, 0, 2),  # yin
+    ("awakening_of_insects", 3, 6, 1, 3),  # mao
+    ("clear_and_bright", 4, 5, 2, 4),  # chen
+    ("start_of_summer", 5, 6, 3, 5),  # si
+    ("grain_in_ear", 6, 6, 4, 6),  # wu
+    ("minor_heat", 7, 7, 5, 7),  # wei
+    ("start_of_autumn", 8, 8, 6, 8),  # shen
+    ("white_dew", 9, 8, 7, 9),  # you
+    ("cold_dew", 10, 8, 8, 10),  # xu
+    ("start_of_winter", 11, 7, 9, 11),  # hai
+    ("major_snow", 12, 7, 10, 0),  # zi
+]
+
+SHA_DIRECTION_BY_BRANCH = {
+    "zi": "south",
+    "chen": "south",
+    "shen": "south",
+    "yin": "north",
+    "wu": "north",
+    "xu": "north",
+    "hai": "west",
+    "mao": "west",
+    "wei": "west",
+    "si": "east",
+    "you": "east",
+    "chou": "east",
+}
+
+SHA_DIRECTION_ZH = {"east": "东", "west": "西", "south": "南", "north": "北"}
+
+WESTERN_WEEKDAY_RULERS = {
+    0: {"planet": "moon", "label_en": "Monday", "label_zh": "周一"},
+    1: {"planet": "mars", "label_en": "Tuesday", "label_zh": "周二"},
+    2: {"planet": "mercury", "label_en": "Wednesday", "label_zh": "周三"},
+    3: {"planet": "jupiter", "label_en": "Thursday", "label_zh": "周四"},
+    4: {"planet": "venus", "label_en": "Friday", "label_zh": "周五"},
+    5: {"planet": "saturn", "label_en": "Saturday", "label_zh": "周六"},
+    6: {"planet": "sun", "label_en": "Sunday", "label_zh": "周日"},
+}
+
+WESTERN_SEASONS = [
+    ((3, 20), "spring"),
+    ((6, 21), "summer"),
+    ((9, 23), "autumn"),
+    ((12, 21), "winter"),
+]
+
+WESTERN_SEASON_ZH = {
+    "spring": "春分季",
+    "summer": "夏至季",
+    "autumn": "秋分季",
+    "winter": "冬至季",
+}
+
+
+def is_chinese_locale(locale_tag: str) -> bool:
+    return locale_tag in {"zh-Hans", "zh-Hant"}
+
+
+def pillar_display(stem: str, branch: str, locale_tag: str) -> str:
+    if is_chinese_locale(locale_tag):
+        return f"{HEAVENLY_STEM_ZH_LABELS.get(stem, stem)}{EARTHLY_BRANCH_ZH_LABELS.get(branch, branch)}"
+    return f"{stem}-{branch}"
+
+
+def animal_label(branch: str, locale_tag: str) -> str:
+    info = CHINESE_ZODIAC_ANIMAL_BY_BRANCH.get(
+        branch, {"en": branch, "zh_hans": branch, "zh_hant": branch}
+    )
+    if locale_tag == "zh-Hant":
+        return str(info["zh_hant"])
+    if locale_tag == "zh-Hans":
+        return str(info["zh_hans"])
+    return str(info["en"])
+
+
+def branch_opposite(branch_index: int) -> str:
+    return EARTHLY_BRANCHES[(branch_index + 6) % 12]
+
+
+def resolve_month_boundary(date_obj: dt.date) -> Dict[str, Any]:
+    events: List[Tuple[dt.date, str, int, int]] = []
+    for year in (date_obj.year - 1, date_obj.year, date_obj.year + 1):
+        for term_key, month, day, month_order, branch_index in MONTH_BOUNDARY_TERMS:
+            events.append((dt.date(year, month, day), term_key, month_order, branch_index))
+    events.sort(key=lambda item: item[0])
+
+    selected = events[0]
+    for event in events:
+        if event[0] <= date_obj:
+            selected = event
+        else:
+            break
+
+    return {
+        "boundary_date": selected[0],
+        "term_key": selected[1],
+        "month_order": selected[2],
+        "branch_index": selected[3],
+    }
+
+
+def parse_ganzhi_text(value: str, locale_tag: str) -> Dict[str, Any]:
+    text = str(value).strip()
+    if len(text) >= 2 and text[0] in ZH_STEM_TO_KEY and text[1] in ZH_BRANCH_TO_KEY:
+        stem = ZH_STEM_TO_KEY[text[0]]
+        branch = ZH_BRANCH_TO_KEY[text[1]]
+        return {
+            "stem": stem,
+            "branch": branch,
+            "stem_label": HEAVENLY_STEM_ZH_LABELS.get(stem, stem),
+            "branch_label": EARTHLY_BRANCH_ZH_LABELS.get(branch, branch),
+            "display": text if is_chinese_locale(locale_tag) else f"{stem}-{branch}",
+        }
+
+    if "-" in text:
+        left, right = text.split("-", 1)
+        stem = left.strip().lower()
+        branch = right.strip().lower()
+        return {
+            "stem": stem,
+            "branch": branch,
+            "stem_label": HEAVENLY_STEM_ZH_LABELS.get(stem, stem),
+            "branch_label": EARTHLY_BRANCH_ZH_LABELS.get(branch, branch),
+            "display": pillar_display(stem, branch, locale_tag),
+        }
+
+    return {"display": text}
+
+
+def signed_angular_delta(left: float, right: float) -> float:
+    return ((right - left + 540.0) % 360.0) - 180.0
+
+
+def moon_phase_payload(instant_utc: dt.datetime, locale_tag: str) -> Dict[str, Any]:
+    # Known new moon reference near J2000 epoch.
+    reference = dt.datetime(2000, 1, 6, 18, 14, tzinfo=dt.timezone.utc)
+    synodic_month = 29.53058867
+    days = (instant_utc - reference).total_seconds() / 86400.0
+    phase_age = days % synodic_month
+    phase_fraction = phase_age / synodic_month
+    illumination = 0.5 * (1.0 - math.cos(2.0 * math.pi * phase_fraction))
+
+    phase_names_en = [
+        "new_moon",
+        "waxing_crescent",
+        "first_quarter",
+        "waxing_gibbous",
+        "full_moon",
+        "waning_gibbous",
+        "last_quarter",
+        "waning_crescent",
+    ]
+    phase_names_zh = ["新月", "娥眉月", "上弦", "盈凸", "满月", "亏凸", "下弦", "残月"]
+    phase_index = int(((phase_fraction + 0.0625) % 1.0) * 8.0) % 8
+
+    label = phase_names_zh[phase_index] if is_chinese_locale(locale_tag) else phase_names_en[phase_index]
+    return {
+        "phase_fraction": round(phase_fraction, 6),
+        "phase_age_days": round(phase_age, 6),
+        "illumination_ratio": round(illumination, 6),
+        "label": label,
+    }
+
+
+def geocentric_longitude_for_body(body: str, instant_utc: dt.datetime) -> float:
+    julian_day = julian_day_from_datetime(instant_utc)
+    days_since_epoch = julian_day - 2451543.5
+
+    earth_position = orbital_position(orbital_elements("earth", days_since_epoch))
+    if body == "sun":
+        return normalize_degrees(math.degrees(math.atan2(-earth_position["y"], -earth_position["x"])))
+    if body == "moon":
+        moon_position = orbital_position(orbital_elements("moon", days_since_epoch))
+        return normalize_degrees(moon_position["longitude"])
+
+    helio = orbital_position(orbital_elements(body, days_since_epoch))
+    geo_x = helio["x"] - earth_position["x"]
+    geo_y = helio["y"] - earth_position["y"]
+    return normalize_degrees(math.degrees(math.atan2(geo_y, geo_x)))
+
+
+def western_season(date_obj: dt.date, locale_tag: str) -> str:
+    marker = (date_obj.month, date_obj.day)
+    season = "winter"
+    for boundary, name in WESTERN_SEASONS:
+        if marker >= boundary:
+            season = name
+    if is_chinese_locale(locale_tag):
+        return WESTERN_SEASON_ZH.get(season, season)
+    return season
+
+
+def build_western_almanac(
+    instant_local: dt.datetime,
+    instant_utc: dt.datetime,
+    astro_snapshot: Dict[str, Any],
+    locale_tag: str,
+) -> Dict[str, Any]:
+    governors = {
+        str(item.get("name")): item for item in astro_snapshot.get("seven_governors", []) if item.get("name")
+    }
+
+    planetary_states: Dict[str, Dict[str, Any]] = {}
+    for body in ("mercury", "venus", "mars", "jupiter", "saturn"):
+        current = geocentric_longitude_for_body(body, instant_utc)
+        previous = geocentric_longitude_for_body(body, instant_utc - dt.timedelta(days=1))
+        nxt = geocentric_longitude_for_body(body, instant_utc + dt.timedelta(days=1))
+        speed = signed_angular_delta(previous, nxt) / 2.0
+        planetary_states[body] = {
+            "longitude_deg": round(current, 6),
+            "retrograde": speed < 0.0,
+            "daily_motion_deg": round(speed, 6),
+        }
+
+    weekday_info = WESTERN_WEEKDAY_RULERS[instant_local.weekday()]
+    return {
+        "provider": "clawlendar_astro",
+        "sun_sign": governors.get("sun", {}).get("zodiac_sign"),
+        "moon_sign": governors.get("moon", {}).get("zodiac_sign"),
+        "moon_phase": moon_phase_payload(instant_utc, locale_tag),
+        "weekday_ruler": {
+            "planet": weekday_info["planet"],
+            "label": weekday_info["label_zh"] if is_chinese_locale(locale_tag) else weekday_info["label_en"],
+        },
+        "season": western_season(instant_local.date(), locale_tag),
+        "planetary_states": planetary_states,
+        "chart_points": {
+            "seven_governors": astro_snapshot.get("seven_governors", []),
+            "four_remainders": astro_snapshot.get("four_remainders", []),
+            "major_aspects": astro_snapshot.get("major_aspects", []),
+        },
+    }
+
+
+def build_eastern_metaphysics_fallback(
+    registry: Dict[str, CalendarAdapter],
+    date_parts: DateParts,
+    instant_local: dt.datetime,
+    locale_tag: str,
+) -> Dict[str, Any]:
+    date_obj = date_parts.to_date()
+    cycle_year = date_obj.year if (date_obj.month, date_obj.day) >= (2, 4) else date_obj.year - 1
+    year_cycle_index = (cycle_year - 4) % 60
+    year_stem_index = year_cycle_index % 10
+    year_branch_index = year_cycle_index % 12
+
+    month_info = resolve_month_boundary(date_obj)
+    first_month_stem_index = ((year_stem_index % 5) * 2 + 2) % 10
+    month_stem_index = (first_month_stem_index + month_info["month_order"]) % 10
+    month_branch_index = month_info["branch_index"]
+
+    day_anchor = dt.date(1984, 2, 2)  # widely used JiaZi anchor in many perpetual-calendar implementations
+    day_cycle_index = (date_obj.toordinal() - day_anchor.toordinal()) % 60
+    day_stem_index = day_cycle_index % 10
+    day_branch_index = day_cycle_index % 12
+
+    hour_branch_index = ((instant_local.hour + 1) // 2) % 12
+    hour_stem_index = ((day_stem_index % 5) * 2 + hour_branch_index) % 10
+
+    year_stem = HEAVENLY_STEMS[year_stem_index]
+    year_branch = EARTHLY_BRANCHES[year_branch_index]
+    month_stem = HEAVENLY_STEMS[month_stem_index]
+    month_branch = EARTHLY_BRANCHES[month_branch_index]
+    day_stem = HEAVENLY_STEMS[day_stem_index]
+    day_branch = EARTHLY_BRANCHES[day_branch_index]
+    hour_stem = HEAVENLY_STEMS[hour_stem_index]
+    hour_branch = EARTHLY_BRANCHES[hour_branch_index]
+
+    lunar_payload = None
+    lunar_adapter = registry.get("chinese_lunar")
+    if lunar_adapter is not None:
+        try:
+            lunar_payload = lunar_adapter.from_gregorian(date_parts)
+        except Exception:
+            lunar_payload = None
+
+    clash_branch = branch_opposite(day_branch_index)
+    sha_direction_en = SHA_DIRECTION_BY_BRANCH.get(day_branch, "south")
+    sha_direction = SHA_DIRECTION_ZH.get(sha_direction_en, sha_direction_en) if is_chinese_locale(locale_tag) else sha_direction_en
+
+    yi = ["祭祀", "读书", "静修", "纳福"] if is_chinese_locale(locale_tag) else [
+        "ritual",
+        "study",
+        "self-cultivation",
+        "blessing",
+    ]
+    ji = ["动土", "远行", "大额签约"] if is_chinese_locale(locale_tag) else [
+        "groundbreaking",
+        "long-distance travel",
+        "large contracts",
+    ]
+
+    return {
+        "provider": "internal_approx",
+        "approximate": True,
+        "bazi": {
+            "year": {
+                "stem": year_stem,
+                "branch": year_branch,
+                "display": pillar_display(year_stem, year_branch, locale_tag),
+            },
+            "month": {
+                "stem": month_stem,
+                "branch": month_branch,
+                "display": pillar_display(month_stem, month_branch, locale_tag),
+            },
+            "day": {
+                "stem": day_stem,
+                "branch": day_branch,
+                "display": pillar_display(day_stem, day_branch, locale_tag),
+            },
+            "hour": {
+                "stem": hour_stem,
+                "branch": hour_branch,
+                "display": pillar_display(hour_stem, hour_branch, locale_tag),
+            },
+            "year_animal": animal_label(year_branch, locale_tag),
+        },
+        "lunar_date": lunar_payload,
+        "solar_term_context": {
+            "boundary_term_key": month_info["term_key"],
+            "boundary_term_label": solar_term_label(month_info["term_key"], locale_tag),
+            "boundary_date": month_info["boundary_date"].isoformat(),
+        },
+        "huangli": {
+            "yi": yi,
+            "ji": ji,
+            "clash": {
+                "day_branch": day_branch,
+                "day_branch_label": EARTHLY_BRANCH_ZH_LABELS.get(day_branch, day_branch),
+                "opposite_branch": clash_branch,
+                "opposite_branch_label": EARTHLY_BRANCH_ZH_LABELS.get(clash_branch, clash_branch),
+            },
+            "sha_direction": sha_direction,
+            "notes": "Fallback approximation. Install 'lunar-python' for richer and more canonical almanac fields.",
+        },
+    }
+
+
+def build_eastern_metaphysics_with_lunar_python(
+    date_parts: DateParts,
+    instant_local: dt.datetime,
+    locale_tag: str,
+) -> Dict[str, Any]:
+    lunar_python = importlib.import_module("lunar_python")
+    solar = lunar_python.Solar.fromYmdHms(
+        instant_local.year,
+        instant_local.month,
+        instant_local.day,
+        instant_local.hour,
+        instant_local.minute,
+        instant_local.second,
+    )
+    lunar = solar.getLunar()
+    eight_char = lunar.getEightChar()
+
+    year_pillar = parse_ganzhi_text(eight_char.getYear(), locale_tag)
+    month_pillar = parse_ganzhi_text(eight_char.getMonth(), locale_tag)
+    day_pillar = parse_ganzhi_text(eight_char.getDay(), locale_tag)
+    hour_pillar = parse_ganzhi_text(eight_char.getTime(), locale_tag)
+
+    year_branch = year_pillar.get("branch")
+    year_animal = animal_label(year_branch, locale_tag) if year_branch else (
+        lunar.getYearShengXiao() if is_chinese_locale(locale_tag) else str(lunar.getYearShengXiao())
+    )
+
+    return {
+        "provider": "lunar_python",
+        "approximate": False,
+        "bazi": {
+            "year": year_pillar,
+            "month": month_pillar,
+            "day": day_pillar,
+            "hour": hour_pillar,
+            "year_animal": year_animal,
+            "wuxing": {
+                "year": eight_char.getYearWuXing(),
+                "month": eight_char.getMonthWuXing(),
+                "day": eight_char.getDayWuXing(),
+                "hour": eight_char.getTimeWuXing(),
+            },
+            "tai_yuan": eight_char.getTaiYuan(),
+            "ming_gong": eight_char.getMingGong(),
+            "shen_gong": eight_char.getShenGong(),
+        },
+        "lunar_date": {
+            "lunar_year": lunar.getYear(),
+            "lunar_month": lunar.getMonth(),
+            "lunar_day": lunar.getDay(),
+            "is_leap_month": bool(lunar.getMonth() < 0),
+            "month_name": lunar.getMonthInChinese(),
+            "day_name": lunar.getDayInChinese(),
+            "year_ganzhi_exact": lunar.getYearInGanZhiExact(),
+            "month_ganzhi_exact": lunar.getMonthInGanZhiExact(),
+            "day_ganzhi_exact": lunar.getDayInGanZhiExact(),
+            "hour_ganzhi": lunar.getTimeInGanZhi(),
+        },
+        "huangli": {
+            "yi": list(lunar.getDayYi() or []),
+            "ji": list(lunar.getDayJi() or []),
+            "pengzu": {
+                "gan": lunar.getPengZuGan(),
+                "zhi": lunar.getPengZuZhi(),
+            },
+            "clash": lunar.getDayChongDesc(),
+            "sha_direction": lunar.getDaySha(),
+            "xiu": lunar.getXiu(),
+            "zheng": lunar.getZheng(),
+            "moon_phase_name": lunar.getYueXiang(),
+            "day_shengxiao": lunar.getDayShengXiao(),
+            "jieqi": lunar.getJieQi(),
+            "festivals": list(lunar.getFestivals() or []),
+            "other_festivals": list(lunar.getOtherFestivals() or []),
+        },
+    }
+
+
+def build_eastern_metaphysics(
+    registry: Dict[str, CalendarAdapter],
+    date_parts: DateParts,
+    instant_local: dt.datetime,
+    locale_tag: str,
+) -> Tuple[Dict[str, Any], List[str]]:
+    try:
+        data = build_eastern_metaphysics_with_lunar_python(date_parts, instant_local, locale_tag)
+        warnings: List[str] = []
+        if not is_chinese_locale(locale_tag):
+            warnings.append("Eastern almanac textual fields are currently Chinese-first when using lunar_python.")
+        return data, warnings
+    except Exception:
+        fallback = build_eastern_metaphysics_fallback(
+            registry=registry,
+            date_parts=date_parts,
+            instant_local=instant_local,
+            locale_tag=locale_tag,
+        )
+        return fallback, [
+            "Optional provider 'lunar_python' unavailable. Using internal approximate Bazi/Huangli model."
+        ]
+
+
+def build_metaphysics_profile(
+    registry: Dict[str, CalendarAdapter],
+    date_parts: DateParts,
+    instant_local: dt.datetime,
+    instant_utc: dt.datetime,
+    astro_snapshot: Dict[str, Any],
+    locale_tag: str,
+) -> Tuple[Dict[str, Any], List[str]]:
+    eastern, eastern_warnings = build_eastern_metaphysics(
+        registry=registry,
+        date_parts=date_parts,
+        instant_local=instant_local,
+        locale_tag=locale_tag,
+    )
+    western = build_western_almanac(
+        instant_local=instant_local,
+        instant_utc=instant_utc,
+        astro_snapshot=astro_snapshot,
+        locale_tag=locale_tag,
+    )
+    return {"eastern": eastern, "western": western}, eastern_warnings
+
 ZODIAC_SIGNS = [
     "aries",
     "taurus",
@@ -630,6 +1115,13 @@ def make_registry() -> Tuple[Dict[str, CalendarAdapter], List[str]]:
             warnings.append(
                 f"Optional provider '{calendar_name}' unavailable. Install dependencies to enable it."
             )
+
+    try:
+        importlib.import_module("lunar_python")
+    except Exception:
+        warnings.append(
+            "Optional provider 'lunar_python' unavailable. Eastern Bazi/Huangli will use internal approximation."
+        )
     return registry, warnings
 
 
@@ -662,6 +1154,20 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "astro_snapshot": True,
             "calendar_month": True,
             "day_profile": True,
+        },
+        "metaphysics": {
+            "supported": True,
+            "eastern": {
+                "bazi": True,
+                "huangli": True,
+                "provider_priority": ["lunar_python", "internal_approx"],
+            },
+            "western": {
+                "chart": True,
+                "moon_phase": True,
+                "weekday_ruler": True,
+                "planetary_states": True,
+            },
         },
         "month_mode_sources": [
             name
@@ -1336,6 +1842,7 @@ def run_day_profile(
     timezone_name: str,
     date_basis: str = "local",
     include_astro: bool = True,
+    include_metaphysics: bool = True,
     locale: Optional[str] = None,
 ) -> Dict[str, Any]:
     detail_targets = [
@@ -1382,7 +1889,12 @@ def run_day_profile(
         "warnings": list(timeline_result["warnings"]),
     }
 
-    if include_astro:
+    timezone = get_timezone(timezone_name)
+    instant_utc = parse_instant_payload(input_payload, timezone)
+    instant_local = instant_utc.astimezone(timezone)
+
+    astro = None
+    if include_astro or include_metaphysics:
         astro = run_astro_snapshot(
             warnings=warnings,
             input_payload=input_payload,
@@ -1390,11 +1902,32 @@ def run_day_profile(
             zodiac_system="tropical",
             bodies=None,
         )
+
+    if include_astro and astro is not None:
         profile["astro"] = {
             "seven_governors": astro["seven_governors"],
             "four_remainders": astro["four_remainders"],
             "major_aspects": astro["major_aspects"],
         }
+
+    if include_metaphysics:
+        locale_tag = timeline_result["locale"]
+        metaphysics, meta_warnings = build_metaphysics_profile(
+            registry=registry,
+            date_parts=DateParts(
+                timeline_result["bridge_date_gregorian"]["year"],
+                timeline_result["bridge_date_gregorian"]["month"],
+                timeline_result["bridge_date_gregorian"]["day"],
+            ),
+            instant_local=instant_local,
+            instant_utc=instant_utc,
+            astro_snapshot=astro if astro is not None else {"seven_governors": [], "four_remainders": [], "major_aspects": []},
+            locale_tag=locale_tag,
+        )
+        profile["metaphysics"] = metaphysics
+        profile["warnings"] = sorted(set(profile["warnings"] + meta_warnings))
+
+    if astro is not None:
         profile["warnings"] = sorted(set(profile["warnings"] + astro["warnings"]))
 
     return profile

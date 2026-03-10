@@ -167,9 +167,10 @@ def day_profile(
     timezone: str = "UTC",
     date_basis: str = "local",
     include_astro: bool = True,
+    include_metaphysics: bool = True,
     locale: str = "en",
 ) -> str:
-    """Return day-level profile: calendar details + optional astro snapshot."""
+    """Return day-level profile: calendar details + optional astro + optional metaphysics."""
     try:
         result = run_day_profile(
             registry=REGISTRY,
@@ -178,6 +179,7 @@ def day_profile(
             timezone_name=timezone,
             date_basis=date_basis,
             include_astro=include_astro,
+            include_metaphysics=include_metaphysics,
             locale=locale,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)

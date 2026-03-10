@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clawlendar"
-version = "0.2.1"
+version = "0.3.0"
 description = "Timestamp-first perpetual calendar interop for AI agents — MCP server for cross-calendar conversion across East/West calendar systems."
 readme = "README.md"
 license = "MIT"
@@ -50,8 +50,11 @@ lunar = [
 extra-calendars = [
     "convertdate>=2.4.0",
 ]
+metaphysics = [
+    "lunar-python>=1.4.4",
+]
 all = [
-    "clawlendar[api,lunar,extra-calendars]",
+    "clawlendar[api,lunar,extra-calendars,metaphysics]",
 ]
 
 [project.scripts]

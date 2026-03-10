@@ -52,6 +52,7 @@ curl -sS -X POST "${BASE_URL}/day-profile" \
     "timezone": "Asia/Taipei",
     "date_basis": "local",
     "include_astro": true,
+    "include_metaphysics": true,
     "locale": "zh-CN"
   }' | python3 -m json.tool
 echo

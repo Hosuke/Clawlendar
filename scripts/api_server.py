@@ -14,7 +14,7 @@ from clawlendar import bridge
 
 app = FastAPI(
     title="Clawlendar API",
-    version="0.2.1",
+    version="0.3.0",
     description="Timestamp-first calendar and celestial interoperability service",
 )
 
@@ -78,6 +78,10 @@ class DayProfileRequest(BaseModel):
     timezone: str = Field(default="UTC", description="IANA timezone")
     date_basis: str = Field(default="local", description="'local' or 'utc'")
     include_astro: bool = Field(default=True, description="Include astro snapshot in the profile")
+    include_metaphysics: bool = Field(
+        default=True,
+        description="Include Eastern/Western metaphysics profile (Bazi, Huangli, moon phase, planetary states)",
+    )
     locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
 
 
@@ -163,6 +167,7 @@ def day_profile(payload: DayProfileRequest) -> Dict[str, Any]:
             timezone_name=payload.timezone,
             date_basis=payload.date_basis,
             include_astro=payload.include_astro,
+            include_metaphysics=payload.include_metaphysics,
             locale=payload.locale,
         )
     except bridge.CalendarError as exc:

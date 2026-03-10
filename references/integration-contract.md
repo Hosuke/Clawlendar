@@ -245,6 +245,7 @@ HTTP smoke test:
   "timezone": "Asia/Taipei",
   "date_basis": "local",
   "include_astro": true,
+  "include_metaphysics": true,
   "locale": "zh-CN"
 }
 ```
@@ -261,6 +262,10 @@ HTTP smoke test:
     "day": 9
   },
   "calendar_details": {},
+  "metaphysics": {
+    "eastern": {},
+    "western": {}
+  },
   "astro": {},
   "warnings": []
 }

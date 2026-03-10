@@ -140,6 +140,11 @@ def parse_args() -> argparse.Namespace:
         help="Disable astro snapshot in day profile output",
     )
     day_profile.add_argument(
+        "--no-metaphysics",
+        action="store_true",
+        help="Disable metaphysics profile output (Bazi/Huangli/Western day almanac)",
+    )
+    day_profile.add_argument(
         "--locale",
         default="en",
         help="Locale tag for localized labels (example: zh-CN, zh-TW)",
@@ -222,6 +227,7 @@ def main() -> int:
                 timezone_name=args.timezone,
                 date_basis=args.date_basis,
                 include_astro=not bool(args.no_astro),
+                include_metaphysics=not bool(args.no_metaphysics),
                 locale=args.locale,
             )
         else:

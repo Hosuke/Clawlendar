@@ -71,7 +71,7 @@ Once connected, Claude has access to six tools:
 | `timeline` | Normalize an instant (timestamp-first) and project into multiple calendar systems |
 | `astro_snapshot` | Return seven governors, four remainders, and major aspects (approximate) |
 | `calendar_month` | Resolve true month boundaries and day list for non-Gregorian month mode |
-| `day_profile` | One-call day details: calendar profile + solar term + sexagenary + optional astro |
+| `day_profile` | One-call day details: calendar profile + optional astro + optional Eastern/Western metaphysics |
 
 ## Supported Calendars
 
@@ -91,10 +91,12 @@ Once connected, Claude has access to six tools:
 pip install clawlendar[all]       # all optional calendars
 pip install clawlendar[lunar]     # Chinese lunar only
 pip install clawlendar[extra-calendars]  # Islamic, Hebrew, Persian
+pip install clawlendar[metaphysics]  # Bazi + Huangli provider (lunar_python)
 ```
 
 - `chinese_lunar` — via `lunardate`
 - `islamic` / `hebrew` / `persian` — via `convertdate`
+- `bazi` / `huangli` (day profile metaphysics block) — via optional `lunar_python`, fallback to internal approximation
 
 ## CLI Usage
 
@@ -124,7 +126,7 @@ python3 scripts/calendar_bridge.py astro \
   --input-json '{"timestamp": 1773014400}' \
   --timezone 'Asia/Taipei'
 
-# Day profile (calendar details + optional astro)
+# Day profile (calendar details + optional astro + optional metaphysics)
 python3 scripts/calendar_bridge.py day-profile \
   --input-json '{"timestamp": 1773014400}' \
   --timezone 'Asia/Taipei' \
@@ -198,6 +200,8 @@ references/
 
 - `sexagenary` year boundary is approximate.
 - `solar_term_24` is fixed-date approximation, not ephemeris-accurate astronomy.
+- Western chart values are lightweight analytical model (not ephemeris-grade precision).
+- When `lunar_python` is unavailable, Bazi/Huangli uses internal approximation fallback.
 - `sexagenary` and `solar_term_24` keep stable machine keys and add localized display fields via `locale` (`zh-CN`, `zh-TW`, etc.).
 - Some calendars are available only when optional dependencies are installed.
 
@@ -239,4 +243,5 @@ pip install clawlendar
 - 民国纪年、佛历、日本年号
 - 干支（近似）、二十四节气（近似）
 - 干支/节气支持本地化显示（可传 `locale=zh-CN` 或 `locale=zh-TW`，同时保留机器可读 key）
+- `day_profile` 支持输出：八字、老黄历（宜忌/彭祖/冲煞）、西方日课（月相/行星状态/星座）
 - 可选：农历（`lunardate`）、伊斯兰历、希伯来历、波斯历（`convertdate`）
