@@ -41,6 +41,11 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="JSON object for source payload",
     )
+    convert.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag for localized labels (example: zh-CN, zh-TW)",
+    )
 
     timeline = sub.add_parser(
         "timeline",
@@ -66,6 +71,11 @@ def parse_args() -> argparse.Namespace:
         "--targets",
         required=False,
         help="Optional comma-separated target calendars. Default projects to all date calendars except gregorian/unix_epoch.",
+    )
+    timeline.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag for localized labels (example: zh-CN, zh-TW)",
     )
 
     astro = sub.add_parser(
@@ -129,6 +139,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Disable astro snapshot in day profile output",
     )
+    day_profile.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag for localized labels (example: zh-CN, zh-TW)",
+    )
     return parser.parse_args()
 
 
@@ -147,7 +162,7 @@ def main() -> int:
                     raise CalendarError("--date-json must be a JSON object")
             except json.JSONDecodeError as exc:
                 raise CalendarError(f"Invalid JSON in --date-json: {exc}") from exc
-            output = run_convert(registry, warnings, args.source, targets, payload)
+            output = run_convert(registry, warnings, args.source, targets, payload, locale=args.locale)
         elif args.command == "timeline":
             try:
                 input_payload = json.loads(args.input_json)
@@ -163,6 +178,7 @@ def main() -> int:
                 timezone_name=args.timezone,
                 date_basis=args.date_basis,
                 targets=targets,
+                locale=args.locale,
             )
         elif args.command == "astro":
             try:
@@ -206,14 +222,15 @@ def main() -> int:
                 timezone_name=args.timezone,
                 date_basis=args.date_basis,
                 include_astro=not bool(args.no_astro),
+                locale=args.locale,
             )
         else:
             raise CalendarError(f"Unsupported command: {args.command}")
     except CalendarError as exc:
-        print(json.dumps({"error": str(exc)}, ensure_ascii=True, indent=2))
+        print(json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2))
         return 1
 
-    print(json.dumps(output, ensure_ascii=True, indent=2))
+    print(json.dumps(output, ensure_ascii=False, indent=2))
     return 0
 
 

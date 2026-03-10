@@ -14,7 +14,7 @@ from clawlendar import bridge
 
 app = FastAPI(
     title="Clawlendar API",
-    version="0.2.0",
+    version="0.2.1",
     description="Timestamp-first calendar and celestial interoperability service",
 )
 
@@ -35,6 +35,7 @@ class ConvertRequest(BaseModel):
     source: str = Field(..., description="Source calendar name")
     targets: List[str] = Field(..., min_length=1, description="Target calendar names")
     source_payload: Dict[str, Any] = Field(..., description="Calendar-specific source payload")
+    locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
 
 
 class TimelineRequest(BaseModel):
@@ -48,6 +49,7 @@ class TimelineRequest(BaseModel):
         default=None,
         description="Optional targets. Default projects all date calendars except gregorian/unix_epoch.",
     )
+    locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
 
 
 class AstroRequest(BaseModel):
@@ -76,6 +78,7 @@ class DayProfileRequest(BaseModel):
     timezone: str = Field(default="UTC", description="IANA timezone")
     date_basis: str = Field(default="local", description="'local' or 'utc'")
     include_astro: bool = Field(default=True, description="Include astro snapshot in the profile")
+    locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
 
 
 @app.get("/health")
@@ -97,6 +100,7 @@ def convert(payload: ConvertRequest) -> Dict[str, Any]:
             source=payload.source,
             targets=payload.targets,
             payload=payload.source_payload,
+            locale=payload.locale,
         )
     except bridge.CalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -114,6 +118,7 @@ def timeline(payload: TimelineRequest) -> Dict[str, Any]:
             timezone_name=payload.timezone,
             date_basis=payload.date_basis,
             targets=payload.targets,
+            locale=payload.locale,
         )
     except bridge.CalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -158,6 +163,7 @@ def day_profile(payload: DayProfileRequest) -> Dict[str, Any]:
             timezone_name=payload.timezone,
             date_basis=payload.date_basis,
             include_astro=payload.include_astro,
+            locale=payload.locale,
         )
     except bridge.CalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -108,14 +108,16 @@ python3 scripts/calendar_bridge.py capabilities
 python3 scripts/calendar_bridge.py convert \
   --source gregorian \
   --targets julian,iso_week,minguo,buddhist,japanese_era,sexagenary,solar_term_24 \
-  --date-json '{"year": 2026, "month": 3, "day": 9}'
+  --date-json '{"year": 2026, "month": 3, "day": 9}' \
+  --locale zh-TW
 
 # Timeline projection
 python3 scripts/calendar_bridge.py timeline \
   --input-json '{"timestamp": 1773014400}' \
   --timezone 'Asia/Taipei' \
   --date-basis local \
-  --targets minguo,japanese_era,sexagenary,solar_term_24
+  --targets minguo,japanese_era,sexagenary,solar_term_24 \
+  --locale zh-CN
 
 # Astro snapshot (seven governors + four remainders)
 python3 scripts/calendar_bridge.py astro \
@@ -125,7 +127,8 @@ python3 scripts/calendar_bridge.py astro \
 # Day profile (calendar details + optional astro)
 python3 scripts/calendar_bridge.py day-profile \
   --input-json '{"timestamp": 1773014400}' \
-  --timezone 'Asia/Taipei'
+  --timezone 'Asia/Taipei' \
+  --locale zh-TW
 
 # True month boundary mode (example: Minguo 115/03)
 python3 scripts/calendar_bridge.py calendar-month \
@@ -152,7 +155,8 @@ curl -sS -X POST http://127.0.0.1:8000/convert \
   -d '{
     "source": "gregorian",
     "targets": ["julian", "iso_week", "minguo"],
-    "source_payload": {"year": 2026, "month": 3, "day": 9}
+    "source_payload": {"year": 2026, "month": 3, "day": 9},
+    "locale": "zh-CN"
   }' | python3 -m json.tool
 ```
 
@@ -194,6 +198,7 @@ references/
 
 - `sexagenary` year boundary is approximate.
 - `solar_term_24` is fixed-date approximation, not ephemeris-accurate astronomy.
+- `sexagenary` and `solar_term_24` keep stable machine keys and add localized display fields via `locale` (`zh-CN`, `zh-TW`, etc.).
 - Some calendars are available only when optional dependencies are installed.
 
 ## Roadmap
@@ -233,4 +238,5 @@ pip install clawlendar
 - 公历、儒略历、ISO 周、Unix 纪元
 - 民国纪年、佛历、日本年号
 - 干支（近似）、二十四节气（近似）
+- 干支/节气支持本地化显示（可传 `locale=zh-CN` 或 `locale=zh-TW`，同时保留机器可读 key）
 - 可选：农历（`lunardate`）、伊斯兰历、希伯来历、波斯历（`convertdate`）

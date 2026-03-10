@@ -46,6 +46,7 @@ def convert(
     source: str,
     targets: List[str],
     source_payload: Dict[str, Any],
+    locale: str = "en",
 ) -> str:
     """Convert a date from one calendar system to one or more target calendars.
 
@@ -65,6 +66,7 @@ def convert(
             source=source,
             targets=targets,
             payload=source_payload,
+            locale=locale,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:
@@ -77,6 +79,7 @@ def timeline(
     timezone: str = "UTC",
     date_basis: str = "local",
     targets: Optional[List[str]] = None,
+    locale: str = "en",
 ) -> str:
     """Normalize an instant (timestamp-first) and project it into multiple calendar systems.
 
@@ -105,6 +108,7 @@ def timeline(
             timezone_name=timezone,
             date_basis=date_basis,
             targets=targets,
+            locale=locale,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:
@@ -163,6 +167,7 @@ def day_profile(
     timezone: str = "UTC",
     date_basis: str = "local",
     include_astro: bool = True,
+    locale: str = "en",
 ) -> str:
     """Return day-level profile: calendar details + optional astro snapshot."""
     try:
@@ -173,6 +178,7 @@ def day_profile(
             timezone_name=timezone,
             date_basis=date_basis,
             include_astro=include_astro,
+            locale=locale,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:

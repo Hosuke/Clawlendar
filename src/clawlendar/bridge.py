@@ -305,6 +305,152 @@ SOLAR_TERM_APPROX: List[Tuple[str, int, int]] = [
     ("winter_solstice", 12, 22),
 ]
 
+HEAVENLY_STEM_ZH_LABELS = {
+    "jia": "甲",
+    "yi": "乙",
+    "bing": "丙",
+    "ding": "丁",
+    "wu": "戊",
+    "ji": "己",
+    "geng": "庚",
+    "xin": "辛",
+    "ren": "壬",
+    "gui": "癸",
+}
+
+EARTHLY_BRANCH_ZH_LABELS = {
+    "zi": "子",
+    "chou": "丑",
+    "yin": "寅",
+    "mao": "卯",
+    "chen": "辰",
+    "si": "巳",
+    "wu": "午",
+    "wei": "未",
+    "shen": "申",
+    "you": "酉",
+    "xu": "戌",
+    "hai": "亥",
+}
+
+SOLAR_TERM_ZH_HANS_LABELS = {
+    "minor_cold": "小寒",
+    "major_cold": "大寒",
+    "start_of_spring": "立春",
+    "rain_water": "雨水",
+    "awakening_of_insects": "惊蛰",
+    "spring_equinox": "春分",
+    "clear_and_bright": "清明",
+    "grain_rain": "谷雨",
+    "start_of_summer": "立夏",
+    "grain_full": "小满",
+    "grain_in_ear": "芒种",
+    "summer_solstice": "夏至",
+    "minor_heat": "小暑",
+    "major_heat": "大暑",
+    "start_of_autumn": "立秋",
+    "end_of_heat": "处暑",
+    "white_dew": "白露",
+    "autumn_equinox": "秋分",
+    "cold_dew": "寒露",
+    "frost_descent": "霜降",
+    "start_of_winter": "立冬",
+    "minor_snow": "小雪",
+    "major_snow": "大雪",
+    "winter_solstice": "冬至",
+}
+
+SOLAR_TERM_ZH_HANT_LABELS = {
+    "minor_cold": "小寒",
+    "major_cold": "大寒",
+    "start_of_spring": "立春",
+    "rain_water": "雨水",
+    "awakening_of_insects": "驚蟄",
+    "spring_equinox": "春分",
+    "clear_and_bright": "清明",
+    "grain_rain": "穀雨",
+    "start_of_summer": "立夏",
+    "grain_full": "小滿",
+    "grain_in_ear": "芒種",
+    "summer_solstice": "夏至",
+    "minor_heat": "小暑",
+    "major_heat": "大暑",
+    "start_of_autumn": "立秋",
+    "end_of_heat": "處暑",
+    "white_dew": "白露",
+    "autumn_equinox": "秋分",
+    "cold_dew": "寒露",
+    "frost_descent": "霜降",
+    "start_of_winter": "立冬",
+    "minor_snow": "小雪",
+    "major_snow": "大雪",
+    "winter_solstice": "冬至",
+}
+
+
+def normalize_locale_tag(locale: Optional[str]) -> str:
+    if locale is None:
+        return "en"
+    normalized = str(locale).strip().replace("_", "-").lower()
+    if normalized == "":
+        return "en"
+    if normalized.startswith("zh"):
+        parts = normalized.split("-")
+        if "hant" in parts or any(tag in parts for tag in ("tw", "hk", "mo")):
+            return "zh-Hant"
+        if "hans" in parts or any(tag in parts for tag in ("cn", "sg")):
+            return "zh-Hans"
+        return "zh-Hans"
+    return "en"
+
+
+def localize_sexagenary_payload(payload: Dict[str, Any], locale_tag: str) -> Dict[str, Any]:
+    stem = str(payload.get("stem", ""))
+    branch = str(payload.get("branch", ""))
+    localized = dict(payload)
+
+    if locale_tag in {"zh-Hans", "zh-Hant"}:
+        stem_label = HEAVENLY_STEM_ZH_LABELS.get(stem, stem)
+        branch_label = EARTHLY_BRANCH_ZH_LABELS.get(branch, branch)
+    else:
+        stem_label = stem
+        branch_label = branch
+
+    localized["stem_label"] = stem_label
+    localized["branch_label"] = branch_label
+    localized["display"] = f"{stem_label}{branch_label}" if locale_tag.startswith("zh") else f"{stem}-{branch}"
+    localized["locale"] = locale_tag
+    return localized
+
+
+def solar_term_label(term_key: str, locale_tag: str) -> str:
+    if locale_tag == "zh-Hant":
+        return SOLAR_TERM_ZH_HANT_LABELS.get(term_key, term_key)
+    if locale_tag == "zh-Hans":
+        return SOLAR_TERM_ZH_HANS_LABELS.get(term_key, term_key)
+    return term_key
+
+
+def localize_solar_term_payload(payload: Dict[str, Any], locale_tag: str) -> Dict[str, Any]:
+    current_key = str(payload.get("current_term", ""))
+    next_key = str(payload.get("next_term", ""))
+    localized = dict(payload)
+    current_label = solar_term_label(current_key, locale_tag)
+    next_label = solar_term_label(next_key, locale_tag)
+    localized["current_term_label"] = current_label
+    localized["next_term_label"] = next_label
+    localized["display"] = f"{current_label} -> {next_label}"
+    localized["locale"] = locale_tag
+    return localized
+
+
+def localize_calendar_payload(target: str, payload: Dict[str, Any], locale_tag: str) -> Dict[str, Any]:
+    if target == "sexagenary":
+        return localize_sexagenary_payload(payload, locale_tag)
+    if target == "solar_term_24":
+        return localize_solar_term_payload(payload, locale_tag)
+    return payload
+
 ZODIAC_SIGNS = [
     "aries",
     "taurus",
@@ -545,6 +691,10 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             ],
             "approximate": True,
         },
+        "i18n": {
+            "supported_locales": ["en", "zh", "zh-CN", "zh-TW", "zh-Hans", "zh-Hant"],
+            "localizable_targets": ["sexagenary", "solar_term_24"],
+        },
         "warnings": warnings,
     }
 
@@ -555,16 +705,19 @@ def run_convert(
     source: str,
     targets: List[str],
     payload: Dict[str, Any],
+    locale: Optional[str] = None,
 ) -> Dict[str, Any]:
     if source not in registry:
         raise CalendarError(f"Unknown source calendar '{source}'")
 
     source_adapter = registry[source]
     canonical = source_adapter.to_gregorian(payload)
+    locale_tag = normalize_locale_tag(locale)
     result = {
         "command": "convert",
         "source": source,
         "source_payload": payload,
+        "locale": locale_tag,
         "canonical_gregorian": canonical.as_dict(),
         "results": {},
         "unavailable_targets": [],
@@ -578,6 +731,7 @@ def run_convert(
             continue
         try:
             target_payload = adapter.from_gregorian(canonical)
+            target_payload = localize_calendar_payload(target, target_payload, locale_tag)
             result["results"][target] = {
                 "payload": target_payload,
                 "approximate": adapter.approximate,
@@ -948,10 +1102,12 @@ def run_timeline(
     timezone_name: str,
     date_basis: str,
     targets: Optional[List[str]],
+    locale: Optional[str] = None,
 ) -> Dict[str, Any]:
     timezone = get_timezone(timezone_name)
     instant_utc = parse_instant_payload(input_payload, timezone)
     instant_local = instant_utc.astimezone(timezone)
+    locale_tag = normalize_locale_tag(locale)
 
     if date_basis == "utc":
         basis_date = instant_utc.date()
@@ -978,6 +1134,7 @@ def run_timeline(
         source="gregorian",
         targets=projection_targets,
         payload=gregorian_payload,
+        locale=locale_tag,
     )
 
     utc_offset = instant_local.utcoffset()
@@ -988,6 +1145,7 @@ def run_timeline(
         "time_model": "timestamp_first",
         "timezone": timezone_name,
         "date_basis": date_basis,
+        "locale": locale_tag,
         "input_payload": input_payload,
         "instant": {
             "timestamp": instant_utc.timestamp(),
@@ -1178,6 +1336,7 @@ def run_day_profile(
     timezone_name: str,
     date_basis: str = "local",
     include_astro: bool = True,
+    locale: Optional[str] = None,
 ) -> Dict[str, Any]:
     detail_targets = [
         "iso_week",
@@ -1197,6 +1356,7 @@ def run_day_profile(
         timezone_name=timezone_name,
         date_basis=date_basis,
         targets=available_targets,
+        locale=locale,
     )
     projection = timeline_result["calendar_projection"]["results"]
 
@@ -1205,6 +1365,7 @@ def run_day_profile(
         "time_model": timeline_result["time_model"],
         "timezone": timeline_result["timezone"],
         "date_basis": timeline_result["date_basis"],
+        "locale": timeline_result["locale"],
         "input_payload": input_payload,
         "instant": timeline_result["instant"],
         "bridge_date_gregorian": timeline_result["bridge_date_gregorian"],

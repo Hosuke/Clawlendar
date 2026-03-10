@@ -47,6 +47,7 @@ HTTP smoke test:
 {
   "source": "gregorian",
   "targets": ["julian", "iso_week", "minguo"],
+  "locale": "zh-CN",
   "source_payload": {
     "year": 2026,
     "month": 3,
@@ -61,6 +62,7 @@ HTTP smoke test:
 {
   "command": "convert",
   "source": "gregorian",
+  "locale": "zh-Hans",
   "source_payload": {
     "year": 2026,
     "month": 3,
@@ -84,7 +86,11 @@ HTTP smoke test:
       "payload": {
         "stem": "bing",
         "branch": "wu",
-        "cycle_index": 43
+        "cycle_index": 43,
+        "stem_label": "丙",
+        "branch_label": "午",
+        "display": "丙午",
+        "locale": "zh-Hans"
       },
       "approximate": true
     }
@@ -103,6 +109,7 @@ HTTP smoke test:
   },
   "timezone": "Asia/Taipei",
   "date_basis": "local",
+  "locale": "zh-TW",
   "targets": ["minguo", "japanese_era", "sexagenary", "solar_term_24"]
 }
 ```
@@ -121,6 +128,7 @@ HTTP smoke test:
   "time_model": "timestamp_first",
   "timezone": "Asia/Taipei",
   "date_basis": "local",
+  "locale": "zh-Hant",
   "instant": {
     "timestamp": 1773014400.0,
     "timestamp_ms": 1773014400000,
@@ -153,6 +161,7 @@ HTTP smoke test:
 - `japanese_era`: `era`, `era_year`, `month`, `day`
 - `sexagenary` (derived only): `stem`, `branch`, `cycle_index`
 - `solar_term_24` (derived only): `current_term`, `current_term_date`, `next_term`, `next_term_date`, `days_to_next`
+- `sexagenary` and `solar_term_24` add localized display fields when `locale` is provided (`stem_label`, `branch_label`, `current_term_label`, `next_term_label`, `display`, `locale`)
 - `chinese_lunar` (optional): `lunar_year`, `lunar_month`, `lunar_day`, `is_leap_month`
 - `islamic`/`hebrew`/`persian` (optional): `year`, `month`, `day`
 
@@ -235,7 +244,8 @@ HTTP smoke test:
   },
   "timezone": "Asia/Taipei",
   "date_basis": "local",
-  "include_astro": true
+  "include_astro": true,
+  "locale": "zh-CN"
 }
 ```
 

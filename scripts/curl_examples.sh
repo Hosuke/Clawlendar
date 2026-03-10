@@ -17,7 +17,8 @@ curl -sS -X POST "${BASE_URL}/convert" \
   -d '{
     "source": "gregorian",
     "targets": ["julian", "iso_week", "minguo"],
-    "source_payload": {"year": 2026, "month": 3, "day": 9}
+    "source_payload": {"year": 2026, "month": 3, "day": 9},
+    "locale": "zh-CN"
   }' | python3 -m json.tool
 echo
 
@@ -28,7 +29,8 @@ curl -sS -X POST "${BASE_URL}/timeline" \
     "input_payload": {"timestamp": 1773014400},
     "timezone": "Asia/Taipei",
     "date_basis": "local",
-    "targets": ["minguo", "japanese_era", "sexagenary", "solar_term_24"]
+    "targets": ["minguo", "japanese_era", "sexagenary", "solar_term_24"],
+    "locale": "zh-TW"
   }' | python3 -m json.tool
 echo
 
@@ -49,7 +51,8 @@ curl -sS -X POST "${BASE_URL}/day-profile" \
     "input_payload": {"timestamp": 1773014400},
     "timezone": "Asia/Taipei",
     "date_basis": "local",
-    "include_astro": true
+    "include_astro": true,
+    "locale": "zh-CN"
   }' | python3 -m json.tool
 echo
 
