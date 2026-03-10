@@ -1,0 +1,220 @@
+{
+  "command": "capabilities",
+  "calendars": [
+    {
+      "name": "buddhist",
+      "description": "Thai Buddhist Era (BE year = Gregorian year + 543).",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "year": 2569,
+        "month": 3,
+        "day": 9
+      }
+    },
+    {
+      "name": "chinese_lunar",
+      "description": "Chinese lunisolar calendar via optional 'lunardate' package.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 1,
+        "is_leap_month": false
+      }
+    },
+    {
+      "name": "gregorian",
+      "description": "Proleptic Gregorian calendar date.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "year": 2026,
+        "month": 3,
+        "day": 9
+      }
+    },
+    {
+      "name": "hebrew",
+      "description": "Hebrew calendar via convertdate.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "year": 1447,
+        "month": 1,
+        "day": 1
+      }
+    },
+    {
+      "name": "islamic",
+      "description": "Islamic calendar (civil/tabular) via convertdate.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "year": 1447,
+        "month": 1,
+        "day": 1
+      }
+    },
+    {
+      "name": "iso_week",
+      "description": "ISO week date using iso_year + iso_week + iso_weekday (1-7).",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "iso_year": 2026,
+        "iso_week": 11,
+        "iso_weekday": 1
+      }
+    },
+    {
+      "name": "japanese_era",
+      "description": "Japanese era date using era + era_year + month + day.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "era": "reiwa",
+        "era_year": 8,
+        "month": 3,
+        "day": 9
+      }
+    },
+    {
+      "name": "julian",
+      "description": "Julian calendar date, bridged via Julian Day Number.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "year": 2026,
+        "month": 2,
+        "day": 24
+      }
+    },
+    {
+      "name": "minguo",
+      "description": "Republic of China calendar (ROC year = Gregorian year - 1911).",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "year": 115,
+        "month": 3,
+        "day": 9
+      }
+    },
+    {
+      "name": "persian",
+      "description": "Persian (Jalali) calendar via convertdate.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "year": 1447,
+        "month": 1,
+        "day": 1
+      }
+    },
+    {
+      "name": "sexagenary",
+      "description": "Sexagenary year label (approximate boundary at Feb 4).",
+      "bidirectional": false,
+      "approximate": true,
+      "payload_example": {
+        "stem": "bing",
+        "branch": "wu",
+        "cycle_index": 43
+      }
+    },
+    {
+      "name": "solar_term_24",
+      "description": "Approximate 24 solar terms from fixed date boundaries.",
+      "bidirectional": false,
+      "approximate": true,
+      "payload_example": {
+        "current_term": "start_of_spring",
+        "next_term": "rain_water",
+        "days_to_next": 15
+      }
+    },
+    {
+      "name": "unix_epoch",
+      "description": "Unix epoch time as seconds or days since 1970-01-01 UTC.",
+      "bidirectional": true,
+      "approximate": false,
+      "payload_example": {
+        "epoch_seconds": 1773014400
+      }
+    }
+  ],
+  "commands": {
+    "convert": true,
+    "timeline": true,
+    "astro_snapshot": true,
+    "calendar_month": true,
+    "day_profile": true
+  },
+  "metaphysics": {
+    "supported": true,
+    "eastern": {
+      "bazi": true,
+      "huangli": true,
+      "provider_priority": [
+        "lunar_python",
+        "internal_approx"
+      ]
+    },
+    "western": {
+      "chart": true,
+      "moon_phase": true,
+      "weekday_ruler": true,
+      "planetary_states": true
+    }
+  },
+  "month_mode_sources": [
+    "buddhist",
+    "chinese_lunar",
+    "gregorian",
+    "hebrew",
+    "islamic",
+    "japanese_era",
+    "julian",
+    "minguo",
+    "persian"
+  ],
+  "astro": {
+    "supported": true,
+    "zodiac_systems": [
+      "tropical"
+    ],
+    "seven_governors": [
+      "sun",
+      "moon",
+      "mercury",
+      "venus",
+      "mars",
+      "jupiter",
+      "saturn"
+    ],
+    "four_remainders": [
+      "ascending_node",
+      "descending_node",
+      "lunar_apogee_mean",
+      "earth_perihelion"
+    ],
+    "approximate": true
+  },
+  "i18n": {
+    "supported_locales": [
+      "en",
+      "zh",
+      "zh-CN",
+      "zh-TW",
+      "zh-Hans",
+      "zh-Hant"
+    ],
+    "localizable_targets": [
+      "sexagenary",
+      "solar_term_24"
+    ]
+  },
+  "warnings": []
+}

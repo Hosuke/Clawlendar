@@ -1,6 +1,15 @@
+# Full local stack for Clawlendar HTTP/MCP + all optional providers.
+# For minimal runtime, use: pip install clawlendar
+
+# Core MCP runtime
+mcp>=1.0.0
+
+# HTTP API runtime
 fastapi>=0.115.0,<1.0.0
 uvicorn[standard]>=0.30.0,<1.0.0
+pydantic>=2.7.0,<3.0.0
 
-# Optional calendar providers
+# Optional calendar and metaphysics providers
 lunardate>=0.2.2
 convertdate>=2.4.0
+lunar-python>=1.4.4

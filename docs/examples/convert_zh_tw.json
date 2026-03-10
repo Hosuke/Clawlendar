@@ -1,0 +1,119 @@
+{
+  "command": "convert",
+  "source": "gregorian",
+  "source_payload": {
+    "year": 2026,
+    "month": 3,
+    "day": 9
+  },
+  "locale": "zh-Hant",
+  "canonical_gregorian": {
+    "year": 2026,
+    "month": 3,
+    "day": 9
+  },
+  "results": {
+    "julian": {
+      "payload": {
+        "year": 2026,
+        "month": 2,
+        "day": 24
+      },
+      "approximate": false
+    },
+    "iso_week": {
+      "payload": {
+        "iso_year": 2026,
+        "iso_week": 11,
+        "iso_weekday": 1
+      },
+      "approximate": false
+    },
+    "minguo": {
+      "payload": {
+        "year": 115,
+        "month": 3,
+        "day": 9
+      },
+      "approximate": false
+    },
+    "buddhist": {
+      "payload": {
+        "year": 2569,
+        "month": 3,
+        "day": 9
+      },
+      "approximate": false
+    },
+    "japanese_era": {
+      "payload": {
+        "era": "reiwa",
+        "era_year": 8,
+        "month": 3,
+        "day": 9
+      },
+      "approximate": false
+    },
+    "sexagenary": {
+      "payload": {
+        "stem": "bing",
+        "branch": "wu",
+        "cycle_index": 43,
+        "stem_label": "丙",
+        "branch_label": "午",
+        "display": "丙午",
+        "locale": "zh-Hant"
+      },
+      "approximate": true
+    },
+    "solar_term_24": {
+      "payload": {
+        "current_term": "awakening_of_insects",
+        "current_term_date": "2026-03-06",
+        "next_term": "spring_equinox",
+        "next_term_date": "2026-03-21",
+        "days_to_next": 12,
+        "current_term_label": "驚蟄",
+        "next_term_label": "春分",
+        "display": "驚蟄 -> 春分",
+        "locale": "zh-Hant"
+      },
+      "approximate": true
+    },
+    "chinese_lunar": {
+      "payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 21,
+        "is_leap_month": false
+      },
+      "approximate": false
+    },
+    "islamic": {
+      "payload": {
+        "year": 1447,
+        "month": 9,
+        "day": 20
+      },
+      "approximate": false
+    },
+    "hebrew": {
+      "payload": {
+        "year": 5786,
+        "month": 12,
+        "day": 20
+      },
+      "approximate": false
+    },
+    "persian": {
+      "payload": {
+        "year": 1404,
+        "month": 12,
+        "day": 18
+      },
+      "approximate": false
+    }
+  },
+  "unavailable_targets": [],
+  "warnings": []
+}

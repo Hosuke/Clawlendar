@@ -1,6 +1,6 @@
 ---
 name: clawlendar
-version: 0.3.0
+version: 0.3.1
 description: Timestamp-first perpetual calendar interop for AI agents. Use when agents need cross-calendar conversion (Gregorian/Julian/ISO/ROC/Buddhist/Japanese era/sexagenary/solar terms plus optional lunar-Islamic-Hebrew-Persian), timeline normalization from timestamps, true month boundaries, and day-level payloads with optional Bazi-Huangli-Western almanac fields.
 author: Huang Geyang
 metadata:

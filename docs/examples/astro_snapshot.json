@@ -1,0 +1,183 @@
+{
+  "command": "astro_snapshot",
+  "time_model": "timestamp_first",
+  "timezone": "Asia/Taipei",
+  "zodiac_system": "tropical",
+  "input_payload": {
+    "timestamp": 1773014400
+  },
+  "instant": {
+    "timestamp": 1773014400.0,
+    "timestamp_ms": 1773014400000,
+    "iso_utc": "2026-03-09T00:00:00+00:00",
+    "iso_local": "2026-03-09T08:00:00+08:00",
+    "utc_offset_seconds": 28800,
+    "julian_day": 2461108.5
+  },
+  "seven_governors": [
+    {
+      "name": "sun",
+      "longitude_deg": 168.429855,
+      "zodiac_sign": "virgo"
+    },
+    {
+      "name": "moon",
+      "longitude_deg": 232.544442,
+      "zodiac_sign": "scorpio"
+    },
+    {
+      "name": "mercury",
+      "longitude_deg": 169.83299,
+      "zodiac_sign": "virgo"
+    },
+    {
+      "name": "venus",
+      "longitude_deg": 122.29174,
+      "zodiac_sign": "leo"
+    },
+    {
+      "name": "mars",
+      "longitude_deg": 285.933228,
+      "zodiac_sign": "capricorn"
+    },
+    {
+      "name": "jupiter",
+      "longitude_deg": 122.673408,
+      "zodiac_sign": "leo"
+    },
+    {
+      "name": "saturn",
+      "longitude_deg": 5.85659,
+      "zodiac_sign": "aries"
+    }
+  ],
+  "four_remainders": [
+    {
+      "name": "ascending_node",
+      "longitude_deg": 338.619624,
+      "zodiac_sign": "pisces"
+    },
+    {
+      "name": "descending_node",
+      "longitude_deg": 158.619624,
+      "zodiac_sign": "virgo"
+    },
+    {
+      "name": "lunar_apogee_mean",
+      "longitude_deg": 248.760811,
+      "zodiac_sign": "sagittarius"
+    },
+    {
+      "name": "earth_perihelion",
+      "longitude_deg": 283.390849,
+      "zodiac_sign": "capricorn"
+    }
+  ],
+  "major_aspects": [
+    {
+      "left": "venus",
+      "right": "jupiter",
+      "aspect": "conjunction",
+      "exact_angle_deg": 0.0,
+      "separation_deg": 0.381668,
+      "orb_deg": 0.381668
+    },
+    {
+      "left": "sun",
+      "right": "mercury",
+      "aspect": "conjunction",
+      "exact_angle_deg": 0.0,
+      "separation_deg": 1.403135,
+      "orb_deg": 1.403135
+    },
+    {
+      "left": "sun",
+      "right": "mars",
+      "aspect": "trine",
+      "exact_angle_deg": 120.0,
+      "separation_deg": 117.503373,
+      "orb_deg": 2.496627
+    },
+    {
+      "left": "moon",
+      "right": "mercury",
+      "aspect": "sextile",
+      "exact_angle_deg": 60.0,
+      "separation_deg": 62.711452,
+      "orb_deg": 2.711452
+    },
+    {
+      "left": "jupiter",
+      "right": "saturn",
+      "aspect": "trine",
+      "exact_angle_deg": 120.0,
+      "separation_deg": 116.816818,
+      "orb_deg": 3.183182
+    },
+    {
+      "left": "venus",
+      "right": "saturn",
+      "aspect": "trine",
+      "exact_angle_deg": 120.0,
+      "separation_deg": 116.43515,
+      "orb_deg": 3.56485
+    },
+    {
+      "left": "mercury",
+      "right": "mars",
+      "aspect": "trine",
+      "exact_angle_deg": 120.0,
+      "separation_deg": 116.100238,
+      "orb_deg": 3.899762
+    },
+    {
+      "left": "sun",
+      "right": "moon",
+      "aspect": "sextile",
+      "exact_angle_deg": 60.0,
+      "separation_deg": 64.114587,
+      "orb_deg": 4.114587
+    }
+  ],
+  "raw_positions": {
+    "sun": {
+      "longitude_deg": 168.429855,
+      "zodiac_sign": "virgo",
+      "distance_au": 0.992726
+    },
+    "moon": {
+      "longitude_deg": 232.544442,
+      "zodiac_sign": "scorpio",
+      "distance_earth_radii": 63.429743
+    },
+    "mercury": {
+      "longitude_deg": 169.83299,
+      "zodiac_sign": "virgo",
+      "distance_au": 1.368407
+    },
+    "venus": {
+      "longitude_deg": 122.29174,
+      "zodiac_sign": "leo",
+      "distance_au": 0.579888
+    },
+    "mars": {
+      "longitude_deg": 285.933228,
+      "zodiac_sign": "capricorn",
+      "distance_au": 0.609405
+    },
+    "jupiter": {
+      "longitude_deg": 122.673408,
+      "zodiac_sign": "leo",
+      "distance_au": 5.879022
+    },
+    "saturn": {
+      "longitude_deg": 5.85659,
+      "zodiac_sign": "aries",
+      "distance_au": 8.569721
+    }
+  },
+  "warnings": [
+    "Astronomical outputs are analytical approximations and not ephemeris-grade precision.",
+    "Zodiac system is tropical in this version."
+  ]
+}

@@ -1,0 +1,455 @@
+{
+  "command": "calendar_month",
+  "source": "chinese_lunar",
+  "month_payload": {
+    "lunar_year": 2026,
+    "lunar_month": 1,
+    "is_leap_month": false
+  },
+  "range_gregorian": {
+    "start": {
+      "year": 2026,
+      "month": 2,
+      "day": 17
+    },
+    "end": {
+      "year": 2026,
+      "month": 3,
+      "day": 18
+    },
+    "day_count": 30
+  },
+  "previous_month_payload": {
+    "lunar_year": 2025,
+    "lunar_month": 12,
+    "is_leap_month": false
+  },
+  "next_month_payload": {
+    "lunar_year": 2026,
+    "lunar_month": 2,
+    "is_leap_month": false
+  },
+  "days": [
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 1,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 17
+      },
+      "weekday": 2
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 2,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 18
+      },
+      "weekday": 3
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 3,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 19
+      },
+      "weekday": 4
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 4,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 20
+      },
+      "weekday": 5
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 5,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 21
+      },
+      "weekday": 6
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 6,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 22
+      },
+      "weekday": 7
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 7,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 23
+      },
+      "weekday": 1
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 8,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 24
+      },
+      "weekday": 2
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 9,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 25
+      },
+      "weekday": 3
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 10,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 26
+      },
+      "weekday": 4
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 11,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 27
+      },
+      "weekday": 5
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 12,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 2,
+        "day": 28
+      },
+      "weekday": 6
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 13,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 1
+      },
+      "weekday": 7
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 14,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 2
+      },
+      "weekday": 1
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 15,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 3
+      },
+      "weekday": 2
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 16,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 4
+      },
+      "weekday": 3
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 17,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 5
+      },
+      "weekday": 4
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 18,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 6
+      },
+      "weekday": 5
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 19,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 7
+      },
+      "weekday": 6
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 20,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 8
+      },
+      "weekday": 7
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 21,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 9
+      },
+      "weekday": 1
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 22,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 10
+      },
+      "weekday": 2
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 23,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 11
+      },
+      "weekday": 3
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 24,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 12
+      },
+      "weekday": 4
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 25,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 13
+      },
+      "weekday": 5
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 26,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 14
+      },
+      "weekday": 6
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 27,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 15
+      },
+      "weekday": 7
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 28,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 16
+      },
+      "weekday": 1
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 29,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 17
+      },
+      "weekday": 2
+    },
+    {
+      "source_payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 30,
+        "is_leap_month": false
+      },
+      "gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 18
+      },
+      "weekday": 3
+    }
+  ],
+  "warnings": []
+}

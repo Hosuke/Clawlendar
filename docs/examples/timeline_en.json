@@ -1,0 +1,87 @@
+{
+  "command": "timeline",
+  "time_model": "timestamp_first",
+  "timezone": "Asia/Taipei",
+  "date_basis": "local",
+  "locale": "en",
+  "input_payload": {
+    "timestamp": 1773014400
+  },
+  "instant": {
+    "timestamp": 1773014400.0,
+    "timestamp_ms": 1773014400000,
+    "iso_utc": "2026-03-09T00:00:00+00:00",
+    "iso_local": "2026-03-09T08:00:00+08:00",
+    "utc_offset_seconds": 28800
+  },
+  "bridge_date_gregorian": {
+    "year": 2026,
+    "month": 3,
+    "day": 9
+  },
+  "calendar_projection": {
+    "targets": [
+      "minguo",
+      "japanese_era",
+      "sexagenary",
+      "solar_term_24",
+      "chinese_lunar"
+    ],
+    "results": {
+      "minguo": {
+        "payload": {
+          "year": 115,
+          "month": 3,
+          "day": 9
+        },
+        "approximate": false
+      },
+      "japanese_era": {
+        "payload": {
+          "era": "reiwa",
+          "era_year": 8,
+          "month": 3,
+          "day": 9
+        },
+        "approximate": false
+      },
+      "sexagenary": {
+        "payload": {
+          "stem": "bing",
+          "branch": "wu",
+          "cycle_index": 43,
+          "stem_label": "bing",
+          "branch_label": "wu",
+          "display": "bing-wu",
+          "locale": "en"
+        },
+        "approximate": true
+      },
+      "solar_term_24": {
+        "payload": {
+          "current_term": "awakening_of_insects",
+          "current_term_date": "2026-03-06",
+          "next_term": "spring_equinox",
+          "next_term_date": "2026-03-21",
+          "days_to_next": 12,
+          "current_term_label": "awakening_of_insects",
+          "next_term_label": "spring_equinox",
+          "display": "awakening_of_insects -> spring_equinox",
+          "locale": "en"
+        },
+        "approximate": true
+      },
+      "chinese_lunar": {
+        "payload": {
+          "lunar_year": 2026,
+          "lunar_month": 1,
+          "lunar_day": 21,
+          "is_leap_month": false
+        },
+        "approximate": false
+      }
+    },
+    "unavailable_targets": []
+  },
+  "warnings": []
+}

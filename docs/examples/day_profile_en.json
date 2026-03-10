@@ -1,0 +1,502 @@
+{
+  "command": "day_profile",
+  "time_model": "timestamp_first",
+  "timezone": "America/New_York",
+  "date_basis": "local",
+  "locale": "en",
+  "input_payload": {
+    "timestamp": 1773014400
+  },
+  "instant": {
+    "timestamp": 1773014400.0,
+    "timestamp_ms": 1773014400000,
+    "iso_utc": "2026-03-09T00:00:00+00:00",
+    "iso_local": "2026-03-08T20:00:00-04:00",
+    "utc_offset_seconds": -14400
+  },
+  "bridge_date_gregorian": {
+    "year": 2026,
+    "month": 3,
+    "day": 8
+  },
+  "calendar_details": {
+    "iso_week": {
+      "payload": {
+        "iso_year": 2026,
+        "iso_week": 10,
+        "iso_weekday": 7
+      },
+      "approximate": false
+    },
+    "minguo": {
+      "payload": {
+        "year": 115,
+        "month": 3,
+        "day": 8
+      },
+      "approximate": false
+    },
+    "buddhist": {
+      "payload": {
+        "year": 2569,
+        "month": 3,
+        "day": 8
+      },
+      "approximate": false
+    },
+    "japanese_era": {
+      "payload": {
+        "era": "reiwa",
+        "era_year": 8,
+        "month": 3,
+        "day": 8
+      },
+      "approximate": false
+    },
+    "sexagenary": {
+      "payload": {
+        "stem": "bing",
+        "branch": "wu",
+        "cycle_index": 43,
+        "stem_label": "bing",
+        "branch_label": "wu",
+        "display": "bing-wu",
+        "locale": "en"
+      },
+      "approximate": true
+    },
+    "solar_term_24": {
+      "payload": {
+        "current_term": "awakening_of_insects",
+        "current_term_date": "2026-03-06",
+        "next_term": "spring_equinox",
+        "next_term_date": "2026-03-21",
+        "days_to_next": 13,
+        "current_term_label": "awakening_of_insects",
+        "next_term_label": "spring_equinox",
+        "display": "awakening_of_insects -> spring_equinox",
+        "locale": "en"
+      },
+      "approximate": true
+    },
+    "chinese_lunar": {
+      "payload": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 20,
+        "is_leap_month": false
+      },
+      "approximate": false
+    }
+  },
+  "unavailable_targets": [],
+  "warnings": [
+    "Astronomical outputs are analytical approximations and not ephemeris-grade precision.",
+    "Eastern almanac textual fields are currently Chinese-first when using lunar_python.",
+    "Zodiac system is tropical in this version."
+  ],
+  "astro": {
+    "seven_governors": [
+      {
+        "name": "sun",
+        "longitude_deg": 168.429855,
+        "zodiac_sign": "virgo"
+      },
+      {
+        "name": "moon",
+        "longitude_deg": 232.544442,
+        "zodiac_sign": "scorpio"
+      },
+      {
+        "name": "mercury",
+        "longitude_deg": 169.83299,
+        "zodiac_sign": "virgo"
+      },
+      {
+        "name": "venus",
+        "longitude_deg": 122.29174,
+        "zodiac_sign": "leo"
+      },
+      {
+        "name": "mars",
+        "longitude_deg": 285.933228,
+        "zodiac_sign": "capricorn"
+      },
+      {
+        "name": "jupiter",
+        "longitude_deg": 122.673408,
+        "zodiac_sign": "leo"
+      },
+      {
+        "name": "saturn",
+        "longitude_deg": 5.85659,
+        "zodiac_sign": "aries"
+      }
+    ],
+    "four_remainders": [
+      {
+        "name": "ascending_node",
+        "longitude_deg": 338.619624,
+        "zodiac_sign": "pisces"
+      },
+      {
+        "name": "descending_node",
+        "longitude_deg": 158.619624,
+        "zodiac_sign": "virgo"
+      },
+      {
+        "name": "lunar_apogee_mean",
+        "longitude_deg": 248.760811,
+        "zodiac_sign": "sagittarius"
+      },
+      {
+        "name": "earth_perihelion",
+        "longitude_deg": 283.390849,
+        "zodiac_sign": "capricorn"
+      }
+    ],
+    "major_aspects": [
+      {
+        "left": "venus",
+        "right": "jupiter",
+        "aspect": "conjunction",
+        "exact_angle_deg": 0.0,
+        "separation_deg": 0.381668,
+        "orb_deg": 0.381668
+      },
+      {
+        "left": "sun",
+        "right": "mercury",
+        "aspect": "conjunction",
+        "exact_angle_deg": 0.0,
+        "separation_deg": 1.403135,
+        "orb_deg": 1.403135
+      },
+      {
+        "left": "sun",
+        "right": "mars",
+        "aspect": "trine",
+        "exact_angle_deg": 120.0,
+        "separation_deg": 117.503373,
+        "orb_deg": 2.496627
+      },
+      {
+        "left": "moon",
+        "right": "mercury",
+        "aspect": "sextile",
+        "exact_angle_deg": 60.0,
+        "separation_deg": 62.711452,
+        "orb_deg": 2.711452
+      },
+      {
+        "left": "jupiter",
+        "right": "saturn",
+        "aspect": "trine",
+        "exact_angle_deg": 120.0,
+        "separation_deg": 116.816818,
+        "orb_deg": 3.183182
+      },
+      {
+        "left": "venus",
+        "right": "saturn",
+        "aspect": "trine",
+        "exact_angle_deg": 120.0,
+        "separation_deg": 116.43515,
+        "orb_deg": 3.56485
+      },
+      {
+        "left": "mercury",
+        "right": "mars",
+        "aspect": "trine",
+        "exact_angle_deg": 120.0,
+        "separation_deg": 116.100238,
+        "orb_deg": 3.899762
+      },
+      {
+        "left": "sun",
+        "right": "moon",
+        "aspect": "sextile",
+        "exact_angle_deg": 60.0,
+        "separation_deg": 64.114587,
+        "orb_deg": 4.114587
+      }
+    ]
+  },
+  "metaphysics": {
+    "eastern": {
+      "provider": "lunar_python",
+      "approximate": false,
+      "bazi": {
+        "year": {
+          "stem": "bing",
+          "branch": "wu",
+          "stem_label": "丙",
+          "branch_label": "午",
+          "display": "bing-wu"
+        },
+        "month": {
+          "stem": "xin",
+          "branch": "mao",
+          "stem_label": "辛",
+          "branch_label": "卯",
+          "display": "xin-mao"
+        },
+        "day": {
+          "stem": "xin",
+          "branch": "si",
+          "stem_label": "辛",
+          "branch_label": "巳",
+          "display": "xin-si"
+        },
+        "hour": {
+          "stem": "wu",
+          "branch": "xu",
+          "stem_label": "戊",
+          "branch_label": "戌",
+          "display": "wu-xu"
+        },
+        "year_animal": "horse",
+        "wuxing": {
+          "year": "火火",
+          "month": "金木",
+          "day": "金火",
+          "hour": "土土"
+        },
+        "tai_yuan": "壬午",
+        "ming_gong": "壬辰",
+        "shen_gong": "庚寅"
+      },
+      "lunar_date": {
+        "lunar_year": 2026,
+        "lunar_month": 1,
+        "lunar_day": 20,
+        "is_leap_month": false,
+        "month_name": "正",
+        "day_name": "二十",
+        "year_ganzhi_exact": "丙午",
+        "month_ganzhi_exact": "辛卯",
+        "day_ganzhi_exact": "辛巳",
+        "hour_ganzhi": "戊戌"
+      },
+      "huangli": {
+        "yi": [
+          "开光",
+          "塑绘",
+          "求嗣",
+          "纳采",
+          "裁衣",
+          "合帐",
+          "冠笄",
+          "安机械",
+          "作梁",
+          "开柱眼",
+          "安门",
+          "安床",
+          "造仓",
+          "祭祀",
+          "会亲友",
+          "祈福",
+          "经络",
+          "纳财",
+          "开市",
+          "立券",
+          "交易",
+          "入学",
+          "理发",
+          "架马"
+        ],
+        "ji": [
+          "出行",
+          "斋醮",
+          "安葬",
+          "嫁娶"
+        ],
+        "pengzu": {
+          "gan": "辛不合酱主人不尝",
+          "zhi": "巳不远行财物伏藏"
+        },
+        "clash": "(乙亥)猪",
+        "sha_direction": "东",
+        "xiu": "房",
+        "zheng": "日",
+        "moon_phase_name": "更待",
+        "day_shengxiao": "蛇",
+        "jieqi": "",
+        "festivals": [],
+        "other_festivals": [
+          "天穿节"
+        ]
+      }
+    },
+    "western": {
+      "provider": "clawlendar_astro",
+      "sun_sign": "virgo",
+      "moon_sign": "scorpio",
+      "moon_phase": {
+        "phase_fraction": 0.672528,
+        "phase_age_days": 19.860137,
+        "illumination_ratio": 0.733888,
+        "label": "waning_gibbous"
+      },
+      "weekday_ruler": {
+        "planet": "sun",
+        "label": "Sunday"
+      },
+      "season": "winter",
+      "planetary_states": {
+        "mercury": {
+          "longitude_deg": 169.83299,
+          "retrograde": false,
+          "daily_motion_deg": 1.896205
+        },
+        "venus": {
+          "longitude_deg": 122.29174,
+          "retrograde": false,
+          "daily_motion_deg": 0.915604
+        },
+        "mars": {
+          "longitude_deg": 285.933228,
+          "retrograde": false,
+          "daily_motion_deg": 0.319694
+        },
+        "jupiter": {
+          "longitude_deg": 122.673408,
+          "retrograde": false,
+          "daily_motion_deg": 0.191485
+        },
+        "saturn": {
+          "longitude_deg": 5.85659,
+          "retrograde": true,
+          "daily_motion_deg": -0.072603
+        }
+      },
+      "chart_points": {
+        "seven_governors": [
+          {
+            "name": "sun",
+            "longitude_deg": 168.429855,
+            "zodiac_sign": "virgo"
+          },
+          {
+            "name": "moon",
+            "longitude_deg": 232.544442,
+            "zodiac_sign": "scorpio"
+          },
+          {
+            "name": "mercury",
+            "longitude_deg": 169.83299,
+            "zodiac_sign": "virgo"
+          },
+          {
+            "name": "venus",
+            "longitude_deg": 122.29174,
+            "zodiac_sign": "leo"
+          },
+          {
+            "name": "mars",
+            "longitude_deg": 285.933228,
+            "zodiac_sign": "capricorn"
+          },
+          {
+            "name": "jupiter",
+            "longitude_deg": 122.673408,
+            "zodiac_sign": "leo"
+          },
+          {
+            "name": "saturn",
+            "longitude_deg": 5.85659,
+            "zodiac_sign": "aries"
+          }
+        ],
+        "four_remainders": [
+          {
+            "name": "ascending_node",
+            "longitude_deg": 338.619624,
+            "zodiac_sign": "pisces"
+          },
+          {
+            "name": "descending_node",
+            "longitude_deg": 158.619624,
+            "zodiac_sign": "virgo"
+          },
+          {
+            "name": "lunar_apogee_mean",
+            "longitude_deg": 248.760811,
+            "zodiac_sign": "sagittarius"
+          },
+          {
+            "name": "earth_perihelion",
+            "longitude_deg": 283.390849,
+            "zodiac_sign": "capricorn"
+          }
+        ],
+        "major_aspects": [
+          {
+            "left": "venus",
+            "right": "jupiter",
+            "aspect": "conjunction",
+            "exact_angle_deg": 0.0,
+            "separation_deg": 0.381668,
+            "orb_deg": 0.381668
+          },
+          {
+            "left": "sun",
+            "right": "mercury",
+            "aspect": "conjunction",
+            "exact_angle_deg": 0.0,
+            "separation_deg": 1.403135,
+            "orb_deg": 1.403135
+          },
+          {
+            "left": "sun",
+            "right": "mars",
+            "aspect": "trine",
+            "exact_angle_deg": 120.0,
+            "separation_deg": 117.503373,
+            "orb_deg": 2.496627
+          },
+          {
+            "left": "moon",
+            "right": "mercury",
+            "aspect": "sextile",
+            "exact_angle_deg": 60.0,
+            "separation_deg": 62.711452,
+            "orb_deg": 2.711452
+          },
+          {
+            "left": "jupiter",
+            "right": "saturn",
+            "aspect": "trine",
+            "exact_angle_deg": 120.0,
+            "separation_deg": 116.816818,
+            "orb_deg": 3.183182
+          },
+          {
+            "left": "venus",
+            "right": "saturn",
+            "aspect": "trine",
+            "exact_angle_deg": 120.0,
+            "separation_deg": 116.43515,
+            "orb_deg": 3.56485
+          },
+          {
+            "left": "mercury",
+            "right": "mars",
+            "aspect": "trine",
+            "exact_angle_deg": 120.0,
+            "separation_deg": 116.100238,
+            "orb_deg": 3.899762
+          },
+          {
+            "left": "sun",
+            "right": "moon",
+            "aspect": "sextile",
+            "exact_angle_deg": 60.0,
+            "separation_deg": 64.114587,
+            "orb_deg": 4.114587
+          }
+        ]
+      }
+    }
+  }
+}

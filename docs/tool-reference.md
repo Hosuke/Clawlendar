@@ -1,0 +1,88 @@
+# Tool Reference
+
+Clawlendar is JSON-first by design. MCP tools return structured JSON that agents can parse deterministically.
+
+## capabilities
+
+- Purpose: discover calendars, commands, locale support, and optional provider status.
+- Input: none.
+- Output highlights:
+  - `calendars[]`
+  - `commands`
+  - `metaphysics`
+  - `i18n.supported_locales`
+
+## convert
+
+- Purpose: convert one source date payload into target calendars.
+- Input:
+  - `source` (string)
+  - `targets` (string[])
+  - `source_payload` (object)
+  - `locale` (optional string)
+- Output highlights:
+  - `bridge_date_gregorian`
+  - `results.<target>.payload`
+  - `unavailable_targets`
+  - `warnings`
+
+## timeline
+
+- Purpose: normalize one instant, then project date to target calendars.
+- Input:
+  - `input_payload` (`timestamp` | `timestamp_ms` | `iso_datetime` | `local_datetime`)
+  - `timezone`
+  - `date_basis` (`local` | `utc`)
+  - `targets` (optional)
+  - `locale` (optional)
+- Output highlights:
+  - `instant`
+  - `bridge_date_gregorian`
+  - `calendar_projection.results`
+
+## astro_snapshot
+
+- Purpose: seven governors, four remainders, and major aspects (analytical approximation).
+- Input:
+  - `input_payload`
+  - `timezone`
+  - `zodiac_system` (currently `tropical`)
+  - `bodies` (optional)
+- Output highlights:
+  - `seven_governors[]`
+  - `four_remainders[]`
+  - `major_aspects[]`
+
+## calendar_month
+
+- Purpose: resolve true month boundaries and day list in selected source calendar.
+- Input:
+  - `source`
+  - `month_payload`
+- Output highlights:
+  - `resolved_month_payload`
+  - `days[]`
+  - `previous_month_payload`
+  - `next_month_payload`
+
+## day_profile
+
+- Purpose: one-call daily payload for calendar details + optional metaphysics and astro.
+- Input:
+  - `input_payload`
+  - `timezone`
+  - `date_basis`
+  - `include_astro` (bool)
+  - `include_metaphysics` (bool)
+  - `locale`
+- Output highlights:
+  - `calendar_details`
+  - `metaphysics.eastern.bazi`
+  - `metaphysics.eastern.huangli.yi/ji`
+  - `metaphysics.eastern.lunar_date.month_name/day_name` (when `lunar_python` available)
+  - `metaphysics.western`
+
+## Stability Notes
+
+- Stable machine keys are preferred; localized display fields are additive.
+- Approximate outputs are explicitly marked via `warnings` and adapter metadata.

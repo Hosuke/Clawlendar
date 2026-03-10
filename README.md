@@ -33,6 +33,12 @@ python3 -m pip install -U "clawlendar[all]" && claude mcp add clawlendar -- claw
 python3 -m pip install -U clawlendar
 ```
 
+### Full local stack (HTTP + all optional providers)
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
 ## GitHub Pages Showcase
 
 This repo includes a showcase page at `docs/index.html` for GitHub Pages.
@@ -89,6 +95,22 @@ claude mcp add clawlendar -- clawlendar
 1. `Convert 2026-03-09 (Gregorian) into Minguo, Japanese era, and sexagenary.`
 2. `Given timestamp 1773014400 in Asia/Taipei, return day profile with Bazi/Huangli and moon phase.`
 3. `Show the true month boundary days for Chinese lunar month 2026-01 (non-leap).`
+
+## Documentation
+
+- Tool reference: [`docs/tool-reference.md`](docs/tool-reference.md)
+- Intent recipes (CN/EN): [`docs/recipes.md`](docs/recipes.md)
+- Locale and I18N notes: [`docs/i18n.md`](docs/i18n.md)
+- Full JSON examples: [`docs/examples/`](docs/examples/)
+
+## JSON Contract + Higher-level UX
+
+Clawlendar keeps MCP outputs JSON-first for agent interoperability.
+
+- Tool layer: deterministic structured JSON (`convert`, `timeline`, `day_profile`, etc.).
+- Assistant layer: optional natural-language UX such as `/今日吉凶` or `today's astrology`, mapped to tool calls.
+
+This separation keeps integrations stable while still supporting rich user-facing prompts.
 
 ## MCP Tools
 
@@ -168,6 +190,41 @@ python3 scripts/calendar_bridge.py calendar-month \
   --source minguo \
   --month-json '{"year":115,"month":3}'
 ```
+
+## Sample Response (Huangli / 吉凶)
+
+Run:
+
+```bash
+python3 scripts/calendar_bridge.py day-profile \
+  --input-json '{"timestamp": 1773014400}' \
+  --timezone 'Asia/Taipei' \
+  --locale zh-CN
+```
+
+Returned fields (excerpt):
+
+```json
+{
+  "command": "day_profile",
+  "locale": "zh-Hans",
+  "bridge_date_gregorian": { "year": 2026, "month": 3, "day": 9 },
+  "metaphysics": {
+    "eastern": {
+      "provider": "lunar_python",
+      "lunar_date": { "month_name": "正", "day_name": "廿一" },
+      "huangli": {
+        "yi": ["祭祀", "嫁娶", "纳婿", "安葬"],
+        "ji": ["栽种", "盖屋", "作灶", "入宅"],
+        "clash": "(丙子)鼠",
+        "sha_direction": "北"
+      }
+    }
+  }
+}
+```
+
+This confirms `day_profile` can directly return almanac-style good/bad actions (`yi`/`ji`) plus clash/sha details.
 
 ## HTTP API (FastAPI)
 
