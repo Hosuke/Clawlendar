@@ -1,5 +1,9 @@
 # Clawlendar
 
+[![ClawHub](https://img.shields.io/badge/ClawHub-clawlendar-blue?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTEyIDJBMTAgMTAgMCAwIDAgMiAxMmExMCAxMCAwIDAgMCAxMCAxMCAxMCAxMCAwIDAgMCAxMC0xMEExMCAxMCAwIDAgMCAxMiAyeiIvPjwvc3ZnPg==)](https://clawhub.ai/Hosuke/clawlendar)
+[![PyPI](https://img.shields.io/pypi/v/clawlendar)](https://pypi.org/project/clawlendar/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 **Timestamp-first perpetual calendar interop for AI agents.**
 
 > Clawlendar = **Claw** (AI agent) + **Calendar**
@@ -11,11 +15,19 @@ Available as an **MCP server** (for Claude Desktop / Claude Code), a **FastAPI H
 
 ## One-line Install
 
+### Via ClawHub
+
+```bash
+clawhub install clawlendar
+```
+
+### Via pip + Claude Code
+
 ```bash
 python3 -m pip install -U "clawlendar[all]" && claude mcp add clawlendar -- clawlendar
 ```
 
-For minimal install only:
+### Minimal install (pip only)
 
 ```bash
 python3 -m pip install -U clawlendar
@@ -235,6 +247,7 @@ If you deploy Clawlendar as a remote service, you are responsible for publishing
 
 ## Support
 
+- ClawHub: https://clawhub.ai/Hosuke/clawlendar
 - GitHub Issues: https://github.com/Hosuke/Clawlendar/issues
 - Repository: https://github.com/Hosuke/Clawlendar
 
@@ -255,6 +268,8 @@ Clawlendar 是一个给 AI agents 用的「时间与历法互通层」，同时�
 ### 安装
 
 ```bash
+clawhub install clawlendar
+# 或
 pip install clawlendar
 ```
 
