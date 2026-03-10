@@ -9,6 +9,18 @@ It normalizes an instant first (Unix timestamp), then projects to multiple calen
 
 Available as an **MCP server** (for Claude Desktop / Claude Code), a **FastAPI HTTP service**, and a **CLI tool**.
 
+## One-line Install
+
+```bash
+python3 -m pip install -U "clawlendar[all]" && claude mcp add clawlendar -- clawlendar
+```
+
+For minimal install only:
+
+```bash
+python3 -m pip install -U clawlendar
+```
+
 ## GitHub Pages Showcase
 
 This repo includes a showcase page at `docs/index.html` for GitHub Pages.
@@ -60,6 +72,12 @@ Config file location:
 claude mcp add clawlendar -- clawlendar
 ```
 
+## Prompt Examples
+
+1. `Convert 2026-03-09 (Gregorian) into Minguo, Japanese era, and sexagenary.`
+2. `Given timestamp 1773014400 in Asia/Taipei, return day profile with Bazi/Huangli and moon phase.`
+3. `Show the true month boundary days for Chinese lunar month 2026-01 (non-leap).`
+
 ## MCP Tools
 
 Once connected, Claude has access to six tools:
@@ -97,6 +115,7 @@ pip install clawlendar[metaphysics]  # Bazi + Huangli provider (lunar_python)
 - `chinese_lunar` — via `lunardate`
 - `islamic` / `hebrew` / `persian` — via `convertdate`
 - `bazi` / `huangli` (day profile metaphysics block) — via optional `lunar_python`, fallback to internal approximation
+- Chinese lunar textual labels (e.g., `初一`, `十五`) are returned in `day_profile.metaphysics.eastern.lunar_date.month_name/day_name` when `lunar_python` is installed.
 
 ## CLI Usage
 
@@ -204,6 +223,20 @@ references/
 - When `lunar_python` is unavailable, Bazi/Huangli uses internal approximation fallback.
 - `sexagenary` and `solar_term_24` keep stable machine keys and add localized display fields via `locale` (`zh-CN`, `zh-TW`, etc.).
 - Some calendars are available only when optional dependencies are installed.
+
+## Privacy Policy
+
+Clawlendar is a local/self-hosted tool by default. It does not include built-in telemetry or remote data collection in core runtime.
+
+- Local MCP mode: data is processed on user machine.
+- Optional HTTP deployment: data handling depends on your own server setup and logs.
+
+If you deploy Clawlendar as a remote service, you are responsible for publishing your own privacy policy for that deployment endpoint.
+
+## Support
+
+- GitHub Issues: https://github.com/Hosuke/Clawlendar/issues
+- Repository: https://github.com/Hosuke/Clawlendar
 
 ## Roadmap
 

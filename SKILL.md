@@ -1,6 +1,14 @@
 ---
 name: clawlendar
-description: Timestamp-first perpetual calendar interop for AI agents. Cross-calendar conversion for Gregorian, Julian, ISO week, ROC (Minguo), Buddhist Era, Japanese era, sexagenary, solar terms, and optional Chinese lunar/Islamic/Hebrew/Persian calendars, plus approximate celestial snapshot output for seven governors and four remainders. Use when agents need to normalize dates across systems, answer calendar questions (including East Asian context), or provide a stable JSON contract for multi-tool integration.
+version: 0.3.0
+description: Timestamp-first perpetual calendar interop for AI agents. Use when agents need cross-calendar conversion (Gregorian/Julian/ISO/ROC/Buddhist/Japanese era/sexagenary/solar terms plus optional lunar-Islamic-Hebrew-Persian), timeline normalization from timestamps, true month boundaries, and day-level payloads with optional Bazi-Huangli-Western almanac fields.
+metadata:
+  openclaw:
+    homepage: https://github.com/Hosuke/Clawlender
+    requires:
+      bins:
+        - python3
+        - pip
 ---
 
 # Clawlendar
@@ -11,21 +19,26 @@ Provide a single, agent-friendly bridge layer so different tools can ask calenda
 
 ## Workflow
 
-1. Discover capabilities first.
-2. Parse source date payload in the declared source calendar.
-3. Convert source to canonical Gregorian date.
-4. Project canonical date into each target calendar.
-5. Return JSON with conversion results, warnings, and unconvertible targets.
-6. Use `calendar-month` when UI needs real month boundaries in non-Gregorian systems.
-7. Use `day-profile` for one-call daily detail payloads (solar term, sexagenary, lunar, optional astro).
+1. Call `capabilities` first to discover supported calendars, optional providers, and locale support.
+2. For calendar conversion, parse source payload in declared calendar and bridge through Gregorian.
+3. For instant-based workflows, use `timeline` (timestamp-first) instead of direct date conversion.
+4. Use `calendar_month` when UI needs true month boundaries in non-Gregorian systems.
+5. Use `day_profile` for one-call details (`sexagenary`, `solar_term_24`, `chinese_lunar`, optional `astro`, optional metaphysics).
+6. Always pass `locale` (`en`, `zh-CN`, `zh-TW`) when user-facing text is required.
 
 ## Quick Start (MCP Server)
 
 Install and run as an MCP server for Claude Desktop / Claude Code:
 
 ```bash
-pip install clawlendar
+python3 -m pip install -U "clawlendar[all]"
 clawlendar
+```
+
+One-line registration in Claude Code:
+
+```bash
+python3 -m pip install -U "clawlendar[all]" && claude mcp add clawlendar -- clawlendar
 ```
 
 Or run directly from source:
@@ -84,7 +97,17 @@ Get unified daily profile payload:
 ```bash
 python3 scripts/calendar_bridge.py day-profile \
   --input-json '{"timestamp": 1773014400}' \
-  --timezone 'Asia/Taipei'
+  --timezone 'Asia/Taipei' \
+  --locale 'zh-TW'
+```
+
+Include full metaphysics block (Bazi/Huangli + Western almanac):
+
+```bash
+python3 scripts/calendar_bridge.py day-profile \
+  --input-json '{"timestamp": 1773014400}' \
+  --timezone 'Asia/Taipei' \
+  --locale 'zh-CN'
 ```
 
 ## HTTP API
@@ -107,6 +130,12 @@ docker run --rm -p 8000:8000 clawlendar:mvp
 
 Use the JSON contract in `references/integration-contract.md` for tool-to-tool integration. Keep payload keys calendar-specific and avoid ambiguous fields.
 
+## Tool Mapping
+
+- MCP tools: `capabilities`, `convert`, `timeline`, `astro_snapshot`, `calendar_month`, `day_profile`
+- CLI commands: `capabilities`, `convert`, `timeline`, `astro`, `calendar-month`, `day-profile`
+- FastAPI endpoints: `GET /capabilities`, `POST /convert`, `POST /timeline`, `POST /astro`, `POST /calendar-month`, `POST /day-profile`
+
 ## References
 
 - Use `references/integration-contract.md` for request/response schema and compatibility guidance.
@@ -120,3 +149,4 @@ Use the JSON contract in `references/integration-contract.md` for tool-to-tool i
 - Return warnings instead of hard-failing for optional providers that are not installed.
 - Mark approximate outputs explicitly (for example, sexagenary year boundaries and fixed-date solar-term approximation).
 - Treat `timeline` as the default bridge for multi-agent scheduling and event processing.
+- `chinese_lunar` conversion payload is numeric; Chinese textual month/day labels are exposed via `day_profile.metaphysics.eastern.lunar_date` when `lunar_python` is available.

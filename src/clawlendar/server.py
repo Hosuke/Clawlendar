@@ -10,6 +10,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 from clawlendar.bridge import (
     CalendarError,
@@ -30,7 +31,15 @@ mcp = FastMCP(
 REGISTRY, WARNINGS = make_registry()
 
 
-@mcp.tool()
+READ_ONLY_TOOL = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=False,
+)
+
+
+@mcp.tool(title="Capabilities", annotations=READ_ONLY_TOOL)
 def capabilities() -> str:
     """List all supported calendars, their payload schemas, and optional provider status.
 
@@ -41,7 +50,7 @@ def capabilities() -> str:
     return json.dumps(result, ensure_ascii=False, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(title="Convert Calendar Date", annotations=READ_ONLY_TOOL)
 def convert(
     source: str,
     targets: List[str],
@@ -73,7 +82,7 @@ def convert(
         return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(title="Timeline Projection", annotations=READ_ONLY_TOOL)
 def timeline(
     input_payload: Dict[str, Any],
     timezone: str = "UTC",
@@ -115,7 +124,7 @@ def timeline(
         return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(title="Astro Snapshot", annotations=READ_ONLY_TOOL)
 def astro_snapshot(
     input_payload: Dict[str, Any],
     timezone: str = "UTC",
@@ -143,7 +152,7 @@ def astro_snapshot(
         return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(title="Calendar Month Boundaries", annotations=READ_ONLY_TOOL)
 def calendar_month(
     source: str,
     month_payload: Dict[str, Any],
@@ -161,7 +170,7 @@ def calendar_month(
         return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(title="Day Profile", annotations=READ_ONLY_TOOL)
 def day_profile(
     input_payload: Dict[str, Any],
     timezone: str = "UTC",
