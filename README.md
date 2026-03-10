@@ -39,6 +39,10 @@ python3 -m pip install -U clawlendar
 python3 -m pip install -r requirements.txt
 ```
 
+## Live Demo (Vercel)
+
+- Frontend demo: https://clawlendar-web.vercel.app/
+
 ## GitHub Pages Showcase
 
 This repo includes a showcase page at `docs/index.html` for GitHub Pages.
@@ -98,6 +102,7 @@ claude mcp add clawlendar -- clawlendar
 
 ## Documentation
 
+- Live demo: https://clawlendar-web.vercel.app/
 - Tool reference: [`docs/tool-reference.md`](docs/tool-reference.md)
 - Intent recipes (CN/EN): [`docs/recipes.md`](docs/recipes.md)
 - Locale and I18N notes: [`docs/i18n.md`](docs/i18n.md)
@@ -321,6 +326,9 @@ If you deploy Clawlendar as a remote service, you are responsible for publishing
 Clawlendar 是一个给 AI agents 用的「时间与历法互通层」，同时也是一个 **MCP Server**（可直接接入 Claude Desktop / Claude Code）。
 
 核心做法是先用时间戳统一「绝对时间」，再投影到不同时区与历法，输出稳定 JSON，方便多工具接入。
+
+在线演示（Vercel）：
+- https://clawlendar-web.vercel.app/
 
 ### 安装
 
