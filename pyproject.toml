@@ -58,9 +58,9 @@ all = [
 clawlendar = "clawlendar.server:main"
 
 [project.urls]
-Homepage = "https://github.com/Hosuke/Clawlender"
-Repository = "https://github.com/Hosuke/Clawlender"
-Issues = "https://github.com/Hosuke/Clawlender/issues"
+Homepage = "https://github.com/Hosuke/Clawlendar"
+Repository = "https://github.com/Hosuke/Clawlendar"
+Issues = "https://github.com/Hosuke/Clawlendar/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -9,6 +9,17 @@ It normalizes an instant first (Unix timestamp), then projects to multiple calen
 
 Available as an **MCP server** (for Claude Desktop / Claude Code), a **FastAPI HTTP service**, and a **CLI tool**.
 
+## GitHub Pages Showcase
+
+This repo includes a showcase page at `docs/index.html` for GitHub Pages.
+
+Enable it via:
+
+1. GitHub repository **Settings** -> **Pages**
+2. **Build and deployment** -> **Source** = `Deploy from a branch`
+3. **Branch** = `main`, **Folder** = `/docs`
+4. Save, then open: `https://hosuke.github.io/Clawlendar/`
+
 ## Install as MCP Server
 
 ### From PyPI

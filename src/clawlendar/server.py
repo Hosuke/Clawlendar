@@ -109,7 +109,7 @@ def timeline(
 
 
 def main():
-    """Entry point for the Clawlender MCP server."""
+    """Entry point for the Clawlendar MCP server."""
     mcp.run()
 
 
