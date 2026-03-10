@@ -14,8 +14,11 @@ from clawlendar.bridge import (
     CalendarError,
     make_registry,
     normalize_targets,
+    run_calendar_month,
+    run_astro_snapshot,
     run_capabilities,
     run_convert,
+    run_day_profile,
     run_timeline,
 )
 
@@ -64,6 +67,68 @@ def parse_args() -> argparse.Namespace:
         required=False,
         help="Optional comma-separated target calendars. Default projects to all date calendars except gregorian/unix_epoch.",
     )
+
+    astro = sub.add_parser(
+        "astro",
+        help="Timestamp-first astrological snapshot (seven governors and four remainders)",
+    )
+    astro.add_argument(
+        "--input-json",
+        required=True,
+        help="JSON object with timestamp/timestamp_ms/iso_datetime/local_datetime",
+    )
+    astro.add_argument(
+        "--timezone",
+        default="UTC",
+        help="IANA timezone for local interpretation and output (default: UTC)",
+    )
+    astro.add_argument(
+        "--zodiac-system",
+        default="tropical",
+        help="Zodiac system (currently only 'tropical')",
+    )
+    astro.add_argument(
+        "--bodies",
+        required=False,
+        help="Optional comma-separated body subset (sun,moon,mercury,venus,mars,jupiter,saturn)",
+    )
+
+    month_mode = sub.add_parser(
+        "calendar-month",
+        help="Resolve true month boundaries in the selected source calendar",
+    )
+    month_mode.add_argument("--source", required=True, help="Source calendar name for month mode")
+    month_mode.add_argument(
+        "--month-json",
+        required=True,
+        help="JSON object describing month identity (example: {'year':2026,'month':3})",
+    )
+
+    day_profile = sub.add_parser(
+        "day-profile",
+        help="Return day-level profile (calendar details + optional astro snapshot)",
+    )
+    day_profile.add_argument(
+        "--input-json",
+        required=True,
+        help="JSON object with timestamp/timestamp_ms/iso_datetime/local_datetime",
+    )
+    day_profile.add_argument(
+        "--timezone",
+        default="UTC",
+        help="IANA timezone for local interpretation and output (default: UTC)",
+    )
+    day_profile.add_argument(
+        "--date-basis",
+        choices=["local", "utc"],
+        default="local",
+        help="Choose local or UTC date basis for projection",
+    )
+    day_profile.add_argument(
+        "--no-astro",
+        action="store_true",
+        help="Disable astro snapshot in day profile output",
+    )
     return parser.parse_args()
 
 
@@ -98,6 +163,49 @@ def main() -> int:
                 timezone_name=args.timezone,
                 date_basis=args.date_basis,
                 targets=targets,
+            )
+        elif args.command == "astro":
+            try:
+                input_payload = json.loads(args.input_json)
+                if not isinstance(input_payload, dict):
+                    raise CalendarError("--input-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --input-json: {exc}") from exc
+            bodies = normalize_targets(args.bodies) if args.bodies else None
+            output = run_astro_snapshot(
+                warnings=warnings,
+                input_payload=input_payload,
+                timezone_name=args.timezone,
+                zodiac_system=args.zodiac_system,
+                bodies=bodies,
+            )
+        elif args.command == "calendar-month":
+            try:
+                month_payload = json.loads(args.month_json)
+                if not isinstance(month_payload, dict):
+                    raise CalendarError("--month-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --month-json: {exc}") from exc
+            output = run_calendar_month(
+                registry=registry,
+                warnings=warnings,
+                source=args.source,
+                month_payload=month_payload,
+            )
+        elif args.command == "day-profile":
+            try:
+                input_payload = json.loads(args.input_json)
+                if not isinstance(input_payload, dict):
+                    raise CalendarError("--input-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --input-json: {exc}") from exc
+            output = run_day_profile(
+                registry=registry,
+                warnings=warnings,
+                input_payload=input_payload,
+                timezone_name=args.timezone,
+                date_basis=args.date_basis,
+                include_astro=not bool(args.no_astro),
             )
         else:
             raise CalendarError(f"Unsupported command: {args.command}")

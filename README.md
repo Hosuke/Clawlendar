@@ -62,13 +62,16 @@ claude mcp add clawlendar -- clawlendar
 
 ## MCP Tools
 
-Once connected, Claude has access to three tools:
+Once connected, Claude has access to six tools:
 
 | Tool | Description |
 |------|-------------|
 | `capabilities` | List all supported calendars, payload schemas, and optional provider status |
 | `convert` | Convert a date from one calendar to one or more target calendars |
 | `timeline` | Normalize an instant (timestamp-first) and project into multiple calendar systems |
+| `astro_snapshot` | Return seven governors, four remainders, and major aspects (approximate) |
+| `calendar_month` | Resolve true month boundaries and day list for non-Gregorian month mode |
+| `day_profile` | One-call day details: calendar profile + solar term + sexagenary + optional astro |
 
 ## Supported Calendars
 
@@ -113,6 +116,21 @@ python3 scripts/calendar_bridge.py timeline \
   --timezone 'Asia/Taipei' \
   --date-basis local \
   --targets minguo,japanese_era,sexagenary,solar_term_24
+
+# Astro snapshot (seven governors + four remainders)
+python3 scripts/calendar_bridge.py astro \
+  --input-json '{"timestamp": 1773014400}' \
+  --timezone 'Asia/Taipei'
+
+# Day profile (calendar details + optional astro)
+python3 scripts/calendar_bridge.py day-profile \
+  --input-json '{"timestamp": 1773014400}' \
+  --timezone 'Asia/Taipei'
+
+# True month boundary mode (example: Minguo 115/03)
+python3 scripts/calendar_bridge.py calendar-month \
+  --source minguo \
+  --month-json '{"year":115,"month":3}'
 ```
 
 ## HTTP API (FastAPI)
@@ -122,7 +140,7 @@ pip install -e ".[api]"
 ./scripts/run_api.sh
 ```
 
-Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline`
+Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month`
 
 ```bash
 # Smoke test

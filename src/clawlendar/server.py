@@ -14,8 +14,11 @@ from mcp.server.fastmcp import FastMCP
 from clawlendar.bridge import (
     CalendarError,
     make_registry,
+    run_calendar_month,
+    run_astro_snapshot,
     run_capabilities,
     run_convert,
+    run_day_profile,
     run_timeline,
 )
 
@@ -102,6 +105,74 @@ def timeline(
             timezone_name=timezone,
             date_basis=date_basis,
             targets=targets,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def astro_snapshot(
+    input_payload: Dict[str, Any],
+    timezone: str = "UTC",
+    zodiac_system: str = "tropical",
+    bodies: Optional[List[str]] = None,
+) -> str:
+    """Return a timestamp-first astrological/astronomical snapshot for seven governors and four remainders.
+
+    Args:
+        input_payload: One of timestamp/timestamp_ms/iso_datetime/local_datetime payloads.
+        timezone: IANA timezone used when parsing local datetime payloads.
+        zodiac_system: Currently supports only "tropical".
+        bodies: Optional subset of seven governors to include.
+    """
+    try:
+        result = run_astro_snapshot(
+            warnings=WARNINGS,
+            input_payload=input_payload,
+            timezone_name=timezone,
+            zodiac_system=zodiac_system,
+            bodies=bodies,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def calendar_month(
+    source: str,
+    month_payload: Dict[str, Any],
+) -> str:
+    """Return true month boundaries and day list for the selected source calendar."""
+    try:
+        result = run_calendar_month(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            source=source,
+            month_payload=month_payload,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool()
+def day_profile(
+    input_payload: Dict[str, Any],
+    timezone: str = "UTC",
+    date_basis: str = "local",
+    include_astro: bool = True,
+) -> str:
+    """Return day-level profile: calendar details + optional astro snapshot."""
+    try:
+        result = run_day_profile(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            input_payload=input_payload,
+            timezone_name=timezone,
+            date_basis=date_basis,
+            include_astro=include_astro,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:

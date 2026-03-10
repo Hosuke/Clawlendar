@@ -14,6 +14,9 @@ Use this contract when integrating multiple agents/tools into one date pipeline.
 - `capabilities`: return available calendars, payload examples, and optional-provider warnings.
 - `convert`: convert one source payload into many target calendar payloads.
 - `timeline`: normalize one instant with timezone and project into target calendars.
+- `astro_snapshot`: return seven governors, four remainders, and major aspects.
+- `calendar_month`: resolve true month boundaries for a selected source calendar.
+- `day_profile`: return one-call daily profile with calendar details and optional astro.
 
 ## 3) HTTP endpoints (FastAPI)
 
@@ -21,6 +24,9 @@ Use this contract when integrating multiple agents/tools into one date pipeline.
 - `GET /capabilities`
 - `POST /convert`
 - `POST /timeline`
+- `POST /astro`
+- `POST /calendar-month`
+- `POST /day-profile`
 
 Local startup:
 
@@ -150,13 +156,113 @@ HTTP smoke test:
 - `chinese_lunar` (optional): `lunar_year`, `lunar_month`, `lunar_day`, `is_leap_month`
 - `islamic`/`hebrew`/`persian` (optional): `year`, `month`, `day`
 
-## 9) Compatibility and versioning
+## 9) Astro request schema
+
+```json
+{
+  "input_payload": {
+    "timestamp": 1773014400
+  },
+  "timezone": "Asia/Taipei",
+  "zodiac_system": "tropical",
+  "bodies": ["sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"]
+}
+```
+
+## 10) Astro response schema
+
+```json
+{
+  "command": "astro_snapshot",
+  "time_model": "timestamp_first",
+  "zodiac_system": "tropical",
+  "seven_governors": [],
+  "four_remainders": [],
+  "major_aspects": [],
+  "raw_positions": {},
+  "warnings": []
+}
+```
+
+## 11) Calendar month request schema
+
+```json
+{
+  "source": "minguo",
+  "month_payload": {
+    "year": 115,
+    "month": 3
+  }
+}
+```
+
+## 12) Calendar month response schema
+
+```json
+{
+  "command": "calendar_month",
+  "source": "minguo",
+  "month_payload": {
+    "year": 115,
+    "month": 3
+  },
+  "range_gregorian": {
+    "start": {
+      "year": 2026,
+      "month": 3,
+      "day": 1
+    },
+    "end": {
+      "year": 2026,
+      "month": 3,
+      "day": 31
+    },
+    "day_count": 31
+  },
+  "previous_month_payload": {},
+  "next_month_payload": {},
+  "days": [],
+  "warnings": []
+}
+```
+
+## 13) Day profile request schema
+
+```json
+{
+  "input_payload": {
+    "timestamp": 1773014400
+  },
+  "timezone": "Asia/Taipei",
+  "date_basis": "local",
+  "include_astro": true
+}
+```
+
+## 14) Day profile response schema
+
+```json
+{
+  "command": "day_profile",
+  "time_model": "timestamp_first",
+  "bridge_date_gregorian": {
+    "year": 2026,
+    "month": 3,
+    "day": 9
+  },
+  "calendar_details": {},
+  "astro": {},
+  "warnings": []
+}
+```
+
+## 15) Compatibility and versioning
 
 - Prefer additive changes only: new calendars, new optional fields, new warnings.
 - Do not rename existing keys in-place.
 - Include `approximate=true` for outputs based on heuristic boundaries.
 
-## 10) Dependency policy
+## 16) Dependency policy
 
 - Core calendars require only Python standard library.
 - Optional calendars activate only when dependencies are present:

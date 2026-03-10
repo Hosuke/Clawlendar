@@ -1,6 +1,6 @@
 ---
 name: clawlendar
-description: Timestamp-first perpetual calendar interop for AI agents. Cross-calendar conversion for Gregorian, Julian, ISO week, ROC (Minguo), Buddhist Era, Japanese era, sexagenary, solar terms, and optional Chinese lunar/Islamic/Hebrew/Persian calendars. Use when agents need to normalize dates across systems, answer calendar questions (including East Asian context), or provide a stable JSON contract for multi-tool integration.
+description: Timestamp-first perpetual calendar interop for AI agents. Cross-calendar conversion for Gregorian, Julian, ISO week, ROC (Minguo), Buddhist Era, Japanese era, sexagenary, solar terms, and optional Chinese lunar/Islamic/Hebrew/Persian calendars, plus approximate celestial snapshot output for seven governors and four remainders. Use when agents need to normalize dates across systems, answer calendar questions (including East Asian context), or provide a stable JSON contract for multi-tool integration.
 ---
 
 # Clawlendar
@@ -16,6 +16,8 @@ Provide a single, agent-friendly bridge layer so different tools can ask calenda
 3. Convert source to canonical Gregorian date.
 4. Project canonical date into each target calendar.
 5. Return JSON with conversion results, warnings, and unconvertible targets.
+6. Use `calendar-month` when UI needs real month boundaries in non-Gregorian systems.
+7. Use `day-profile` for one-call daily detail payloads (solar term, sexagenary, lunar, optional astro).
 
 ## Quick Start (MCP Server)
 
@@ -59,6 +61,30 @@ python3 scripts/calendar_bridge.py timeline \
   --timezone 'Asia/Taipei' \
   --date-basis local \
   --targets minguo,japanese_era,sexagenary,solar_term_24
+```
+
+Generate an astro snapshot for zodiac wheel rendering:
+
+```bash
+python3 scripts/calendar_bridge.py astro \
+  --input-json '{"timestamp": 1773014400}' \
+  --timezone 'Asia/Taipei'
+```
+
+Get true month boundaries for non-Gregorian month mode:
+
+```bash
+python3 scripts/calendar_bridge.py calendar-month \
+  --source minguo \
+  --month-json '{"year":115,"month":3}'
+```
+
+Get unified daily profile payload:
+
+```bash
+python3 scripts/calendar_bridge.py day-profile \
+  --input-json '{"timestamp": 1773014400}' \
+  --timezone 'Asia/Taipei'
 ```
 
 ## HTTP API
