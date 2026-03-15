@@ -9,12 +9,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from clawlendar import bridge
+from clawlendar import __version__, bridge
 
 
 app = FastAPI(
     title="Clawlendar API",
-    version="0.3.0",
+    version=__version__,
     description="Timestamp-first calendar and celestial interoperability service",
 )
 
@@ -109,6 +109,10 @@ class LifeContextRequest(BaseModel):
         description="Optional timeline projection targets",
     )
     locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
+    auto_weather: bool = Field(
+        default=True,
+        description="Best-effort weather enrichment from latitude/longitude via Open-Meteo",
+    )
 
 
 @app.get("/health")
@@ -216,6 +220,7 @@ def life_context(payload: LifeContextRequest) -> Dict[str, Any]:
             subject_payload=payload.subject_payload,
             targets=payload.targets,
             locale=payload.locale,
+            auto_weather=payload.auto_weather,
         )
     except bridge.CalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

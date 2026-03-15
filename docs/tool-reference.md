@@ -60,7 +60,7 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
   - `source`
   - `month_payload`
 - Output highlights:
-  - `resolved_month_payload`
+  - `month_payload`
   - `days[]`
   - `previous_month_payload`
   - `next_month_payload`
@@ -90,12 +90,15 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
   - `now_input_payload` (optional instant payload; defaults to current UTC)
   - `timezone`
   - `date_basis`
-  - `space_payload` (optional: location_name/latitude/longitude/background/environment_tags)
+  - `space_payload` (optional: location/country/region/city/latitude/longitude/elevation/background/climate/weather_note/scenery_note/environment_tags)
   - `subject_payload` (optional: entity_id/name/role/soul/traits/memory_anchor)
   - `targets` (optional projection calendars)
   - `locale`
+  - `auto_weather` (bool, default true; best-effort weather enrichment from Open-Meteo when latitude/longitude are provided)
 - Output highlights:
   - `life.age` (`seconds`, `days`, `readable`, `stage`)
+  - `life.birthday` (`month`, `day`, `years_elapsed`, `days_until_next_birthday`)
+  - `environment.place` + `environment.weather`
   - `calendar_context.birth` and `calendar_context.now`
   - `world_context.scene_prompt`
   - `world_context.continuity_rules`

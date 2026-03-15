@@ -150,7 +150,20 @@
     "timeline": true,
     "astro_snapshot": true,
     "calendar_month": true,
-    "day_profile": true
+    "day_profile": true,
+    "life_context": true
+  },
+  "life_context": {
+    "supported": true,
+    "features": {
+      "birth_to_now": true,
+      "age_and_stage": true,
+      "birthday_profile": true,
+      "space_anchor": true,
+      "subject_anchor": true,
+      "auto_weather_enrichment": true
+    },
+    "weather_provider": "open_meteo (best effort)"
   },
   "metaphysics": {
     "supported": true,

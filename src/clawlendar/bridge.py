@@ -9,6 +9,9 @@ import datetime as dt
 import importlib
 import json
 import math
+import urllib.error
+import urllib.parse
+import urllib.request
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
@@ -524,6 +527,37 @@ WESTERN_SEASON_ZH = {
     "summer": "夏至季",
     "autumn": "秋分季",
     "winter": "冬至季",
+}
+
+WEATHER_CODE_LABELS = {
+    0: "clear_sky",
+    1: "mainly_clear",
+    2: "partly_cloudy",
+    3: "overcast",
+    45: "fog",
+    48: "depositing_rime_fog",
+    51: "drizzle_light",
+    53: "drizzle_moderate",
+    55: "drizzle_dense",
+    56: "freezing_drizzle_light",
+    57: "freezing_drizzle_dense",
+    61: "rain_slight",
+    63: "rain_moderate",
+    65: "rain_heavy",
+    66: "freezing_rain_light",
+    67: "freezing_rain_heavy",
+    71: "snow_slight",
+    73: "snow_moderate",
+    75: "snow_heavy",
+    77: "snow_grains",
+    80: "rain_showers_slight",
+    81: "rain_showers_moderate",
+    82: "rain_showers_violent",
+    85: "snow_showers_slight",
+    86: "snow_showers_heavy",
+    95: "thunderstorm",
+    96: "thunderstorm_hail_slight",
+    99: "thunderstorm_hail_heavy",
 }
 
 
@@ -1156,6 +1190,18 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "day_profile": True,
             "life_context": True,
         },
+        "life_context": {
+            "supported": True,
+            "features": {
+                "birth_to_now": True,
+                "age_and_stage": True,
+                "birthday_profile": True,
+                "space_anchor": True,
+                "subject_anchor": True,
+                "auto_weather_enrichment": True,
+            },
+            "weather_provider": "open_meteo (best effort)",
+        },
         "metaphysics": {
             "supported": True,
             "eastern": {
@@ -1353,13 +1399,22 @@ def normalize_space_payload(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]
     longitude = source.get("longitude")
     lat_value = to_float(latitude, "latitude") if latitude is not None else None
     lon_value = to_float(longitude, "longitude") if longitude is not None else None
+    elevation = source.get("elevation_m")
+    elevation_value = to_float(elevation, "elevation_m") if elevation is not None else None
     return {
         "location_name": location_name or None,
         "timezone": str(source.get("timezone") or "").strip() or None,
+        "country": str(source.get("country") or "").strip() or None,
+        "region": str(source.get("region") or "").strip() or None,
+        "city": str(source.get("city") or "").strip() or None,
         "latitude": lat_value,
         "longitude": lon_value,
+        "elevation_m": elevation_value,
         "environment_tags": normalized_tags,
         "background": str(source.get("background") or "").strip() or None,
+        "climate": str(source.get("climate") or "").strip() or None,
+        "weather_note": str(source.get("weather_note") or source.get("weather") or "").strip() or None,
+        "scenery_note": str(source.get("scenery_note") or source.get("scenery") or "").strip() or None,
     }
 
 
@@ -1377,6 +1432,114 @@ def normalize_subject_payload(payload: Optional[Dict[str, Any]]) -> Dict[str, An
         "traits": normalized_traits,
         "memory_anchor": str(source.get("memory_anchor") or "").strip() or None,
     }
+
+
+def safe_birthday_date(year: int, month: int, day: int) -> Tuple[dt.date, bool]:
+    try:
+        return dt.date(year, month, day), False
+    except ValueError:
+        if month == 2 and day == 29:
+            return dt.date(year, 2, 28), True
+        raise
+
+
+def build_birthday_profile(birth_local: dt.datetime, now_local: dt.datetime) -> Dict[str, Any]:
+    birth_month = birth_local.month
+    birth_day = birth_local.day
+    this_year_birthday, this_year_adjusted = safe_birthday_date(now_local.year, birth_month, birth_day)
+    if now_local.date() <= this_year_birthday:
+        next_birthday = this_year_birthday
+        next_adjusted = this_year_adjusted
+    else:
+        next_birthday, next_adjusted = safe_birthday_date(now_local.year + 1, birth_month, birth_day)
+
+    days_until_next = (next_birthday - now_local.date()).days
+    years_elapsed = now_local.year - birth_local.year - (1 if now_local.date() < this_year_birthday else 0)
+    return {
+        "month": birth_month,
+        "day": birth_day,
+        "is_today": now_local.date() == this_year_birthday,
+        "years_elapsed": max(0, years_elapsed),
+        "next_birthday_date_local": next_birthday.isoformat(),
+        "days_until_next_birthday": days_until_next,
+        "leap_day_adjusted_this_year": this_year_adjusted,
+        "leap_day_adjusted_next": next_adjusted,
+    }
+
+
+def fetch_open_meteo_weather(
+    latitude: float,
+    longitude: float,
+    timezone_name: str,
+) -> Dict[str, Any]:
+    params = {
+        "latitude": str(latitude),
+        "longitude": str(longitude),
+        "current": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m",
+        "timezone": timezone_name,
+    }
+    query = urllib.parse.urlencode(params)
+    url = f"https://api.open-meteo.com/v1/forecast?{query}"
+    request = urllib.request.Request(url, headers={"User-Agent": "clawlendar"})
+    with urllib.request.urlopen(request, timeout=6) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    current = payload.get("current")
+    if not isinstance(current, dict):
+        raise CalendarError("weather provider returned unexpected payload")
+
+    weather_code_raw = current.get("weather_code")
+    weather_code = int(weather_code_raw) if weather_code_raw is not None else None
+    return {
+        "provider": "open_meteo",
+        "time": current.get("time"),
+        "temperature_c": current.get("temperature_2m"),
+        "apparent_temperature_c": current.get("apparent_temperature"),
+        "relative_humidity_pct": current.get("relative_humidity_2m"),
+        "precipitation_mm": current.get("precipitation"),
+        "wind_speed_kmh": current.get("wind_speed_10m"),
+        "weather_code": weather_code,
+        "weather_label": WEATHER_CODE_LABELS.get(weather_code, "unknown") if weather_code is not None else None,
+        "timezone": timezone_name,
+    }
+
+
+def build_environment_context(
+    normalized_space: Dict[str, Any],
+    timezone_name: str,
+    auto_weather: bool,
+) -> Tuple[Dict[str, Any], List[str]]:
+    context = {
+        "place": {
+            "location_name": normalized_space.get("location_name"),
+            "country": normalized_space.get("country"),
+            "region": normalized_space.get("region"),
+            "city": normalized_space.get("city"),
+            "latitude": normalized_space.get("latitude"),
+            "longitude": normalized_space.get("longitude"),
+            "elevation_m": normalized_space.get("elevation_m"),
+            "timezone": normalized_space.get("timezone"),
+        },
+        "climate": normalized_space.get("climate"),
+        "weather_note": normalized_space.get("weather_note"),
+        "scenery_note": normalized_space.get("scenery_note"),
+        "weather": None,
+    }
+    context_warnings: List[str] = []
+
+    latitude = normalized_space.get("latitude")
+    longitude = normalized_space.get("longitude")
+    if auto_weather and latitude is not None and longitude is not None:
+        weather_timezone = normalized_space.get("timezone") or timezone_name
+        try:
+            context["weather"] = fetch_open_meteo_weather(
+                latitude=latitude,
+                longitude=longitude,
+                timezone_name=weather_timezone,
+            )
+        except (CalendarError, urllib.error.URLError, TimeoutError, ValueError) as exc:
+            context_warnings.append(f"Weather enrichment unavailable: {exc}")
+
+    return context, sorted(set(context_warnings))
 
 
 def normalize_degrees(value: float) -> float:
@@ -1764,6 +1927,7 @@ def run_life_context(
     subject_payload: Optional[Dict[str, Any]] = None,
     targets: Optional[List[str]] = None,
     locale: Optional[str] = None,
+    auto_weather: bool = True,
 ) -> Dict[str, Any]:
     if date_basis not in {"local", "utc"}:
         raise CalendarError("date_basis must be 'local' or 'utc'")
@@ -1818,9 +1982,17 @@ def run_life_context(
     age_hours = age_seconds / 3600.0
     age_minutes = age_seconds / 60.0
     life_stage = life_stage_from_age_days(age_days)
+    birth_local = birth_utc.astimezone(timezone)
+    now_local = now_utc.astimezone(timezone)
+    birthday_profile = build_birthday_profile(birth_local, now_local)
 
     normalized_space = normalize_space_payload(space_payload)
     normalized_subject = normalize_subject_payload(subject_payload)
+    environment_context, environment_warnings = build_environment_context(
+        normalized_space=normalized_space,
+        timezone_name=timezone_name,
+        auto_weather=auto_weather,
+    )
     life_id = normalized_subject["entity_id"] or f"LIFE-{int(birth_utc.timestamp())}"
 
     role = normalized_subject.get("role") or "digital lifeform"
@@ -1836,6 +2008,16 @@ def run_life_context(
     )
     if normalized_space.get("background"):
         scene_prompt = f"{scene_prompt} Background: {normalized_space['background']}"
+    if environment_context.get("weather"):
+        weather = environment_context["weather"]
+        weather_label = weather.get("weather_label")
+        temp = weather.get("temperature_c")
+        if weather_label is not None and temp is not None:
+            scene_prompt = f"{scene_prompt} Weather now: {weather_label}, {temp}C."
+    elif environment_context.get("weather_note"):
+        scene_prompt = f"{scene_prompt} Weather note: {environment_context['weather_note']}"
+    if environment_context.get("scenery_note"):
+        scene_prompt = f"{scene_prompt} Scenery: {environment_context['scenery_note']}"
 
     return {
         "command": "life_context",
@@ -1855,6 +2037,7 @@ def run_life_context(
                 "readable": format_age_readable(age_seconds),
                 "stage": life_stage,
             },
+            "birthday": birthday_profile,
             "continuity": {
                 "birth_before_now": True,
                 "tick_timestamp": int(now_utc.timestamp()),
@@ -1862,6 +2045,7 @@ def run_life_context(
             },
         },
         "space": normalized_space,
+        "environment": environment_context,
         "subject": normalized_subject,
         "calendar_context": {
             "birth": {
@@ -1886,7 +2070,14 @@ def run_life_context(
                 "If media intent appears, attach this context as generation seed.",
             ],
         },
-        "warnings": sorted(set(warnings + birth_timeline["warnings"] + now_timeline["warnings"])),
+        "warnings": sorted(
+            set(
+                warnings
+                + birth_timeline["warnings"]
+                + now_timeline["warnings"]
+                + environment_warnings
+            )
+        ),
     }
 
 

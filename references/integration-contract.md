@@ -17,6 +17,7 @@ Use this contract when integrating multiple agents/tools into one date pipeline.
 - `astro_snapshot`: return seven governors, four remainders, and major aspects.
 - `calendar_month`: resolve true month boundaries for a selected source calendar.
 - `day_profile`: return one-call daily profile with calendar details and optional astro.
+- `life_context`: return birth->now continuity context with life/space/subject/environment anchors.
 
 ## 3) HTTP endpoints (FastAPI)
 
@@ -27,6 +28,7 @@ Use this contract when integrating multiple agents/tools into one date pipeline.
 - `POST /astro`
 - `POST /calendar-month`
 - `POST /day-profile`
+- `POST /life-context`
 
 Local startup:
 
@@ -277,10 +279,63 @@ HTTP smoke test:
 - Do not rename existing keys in-place.
 - Include `approximate=true` for outputs based on heuristic boundaries.
 
-## 16) Dependency policy
+## 16) Life context request schema
+
+```json
+{
+  "birth_input_payload": {"iso_datetime": "2026-03-01T09:00:00+08:00"},
+  "now_input_payload": {"iso_datetime": "2026-03-09T18:30:00+08:00"},
+  "timezone": "Asia/Taipei",
+  "date_basis": "local",
+  "space_payload": {
+    "location_name": "Nanjing Qinhuai",
+    "latitude": 32.0366,
+    "longitude": 118.7895,
+    "climate": "humid subtropical",
+    "scenery_note": "night river lights"
+  },
+  "subject_payload": {
+    "entity_id": "lobster-001",
+    "role": "young daughter",
+    "soul": "gentle and proactive"
+  },
+  "auto_weather": true,
+  "locale": "en"
+}
+```
+
+## 17) Life context response schema
+
+```json
+{
+  "command": "life_context",
+  "life": {
+    "life_id": "lobster-001",
+    "age": {"seconds": 0, "days": 0.0, "readable": "0s", "stage": "seed"},
+    "birthday": {"month": 3, "day": 1, "days_until_next_birthday": 0}
+  },
+  "space": {},
+  "environment": {
+    "place": {},
+    "weather": null
+  },
+  "subject": {},
+  "calendar_context": {
+    "birth": {},
+    "now": {}
+  },
+  "world_context": {
+    "scene_prompt": ""
+  },
+  "warnings": []
+}
+```
+
+## 18) Dependency policy
 
 - Core calendars require only Python standard library.
 - Optional calendars activate only when dependencies are present:
   - `lunardate` for Chinese lunar
   - `convertdate` for Islamic/Hebrew/Persian
+  - `lunar-python` for richer Eastern metaphysics fields
 - Integrators should call `capabilities` at startup and cache availability.

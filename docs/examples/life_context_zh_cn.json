@@ -1,0 +1,273 @@
+{
+  "command": "life_context",
+  "time_model": "timestamp_first",
+  "timezone": "Asia/Taipei",
+  "date_basis": "local",
+  "locale": "zh-Hans",
+  "life": {
+    "life_id": "lobster-001",
+    "birth_instant": {
+      "timestamp": 1772326800.0,
+      "timestamp_ms": 1772326800000,
+      "iso_utc": "2026-03-01T01:00:00+00:00",
+      "iso_local": "2026-03-01T09:00:00+08:00",
+      "utc_offset_seconds": 28800
+    },
+    "now_instant": {
+      "timestamp": 1773052200.0,
+      "timestamp_ms": 1773052200000,
+      "iso_utc": "2026-03-09T10:30:00+00:00",
+      "iso_local": "2026-03-09T18:30:00+08:00",
+      "utc_offset_seconds": 28800
+    },
+    "age": {
+      "seconds": 725400,
+      "minutes": 12090.0,
+      "hours": 201.5,
+      "days": 8.395833,
+      "readable": "8d 9h 30m",
+      "stage": "juvenile"
+    },
+    "birthday": {
+      "month": 3,
+      "day": 1,
+      "is_today": false,
+      "years_elapsed": 0,
+      "next_birthday_date_local": "2027-03-01",
+      "days_until_next_birthday": 357,
+      "leap_day_adjusted_this_year": false,
+      "leap_day_adjusted_next": false
+    },
+    "continuity": {
+      "birth_before_now": true,
+      "tick_timestamp": 1773052200,
+      "seed_brief": "18岁女儿 @ 南京·秦淮河 | stage=juvenile | age=8d 9h 30m | soul=温柔且主动问候"
+    }
+  },
+  "space": {
+    "location_name": "南京·秦淮河",
+    "timezone": null,
+    "country": null,
+    "region": null,
+    "city": null,
+    "latitude": 32.0366,
+    "longitude": 118.7895,
+    "elevation_m": null,
+    "environment_tags": [],
+    "background": "春季夜游",
+    "climate": "humid subtropical",
+    "weather_note": null,
+    "scenery_note": "夜色与河道灯影"
+  },
+  "environment": {
+    "place": {
+      "location_name": "南京·秦淮河",
+      "country": null,
+      "region": null,
+      "city": null,
+      "latitude": 32.0366,
+      "longitude": 118.7895,
+      "elevation_m": null,
+      "timezone": null
+    },
+    "climate": "humid subtropical",
+    "weather_note": null,
+    "scenery_note": "夜色与河道灯影",
+    "weather": {
+      "provider": "open_meteo",
+      "time": "2026-03-16T01:00",
+      "temperature_c": 9.4,
+      "apparent_temperature_c": 6.9,
+      "relative_humidity_pct": 90,
+      "precipitation_mm": 0.1,
+      "wind_speed_kmh": 12.6,
+      "weather_code": 61,
+      "weather_label": "rain_slight",
+      "timezone": "Asia/Taipei"
+    }
+  },
+  "subject": {
+    "entity_id": "lobster-001",
+    "name": null,
+    "role": "18岁女儿",
+    "soul": "温柔且主动问候",
+    "traits": [],
+    "memory_anchor": null
+  },
+  "calendar_context": {
+    "birth": {
+      "bridge_date_gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 1
+      },
+      "projection": {
+        "targets": [
+          "iso_week",
+          "minguo",
+          "japanese_era",
+          "sexagenary",
+          "solar_term_24",
+          "chinese_lunar"
+        ],
+        "results": {
+          "iso_week": {
+            "payload": {
+              "iso_year": 2026,
+              "iso_week": 9,
+              "iso_weekday": 7
+            },
+            "approximate": false
+          },
+          "minguo": {
+            "payload": {
+              "year": 115,
+              "month": 3,
+              "day": 1
+            },
+            "approximate": false
+          },
+          "japanese_era": {
+            "payload": {
+              "era": "reiwa",
+              "era_year": 8,
+              "month": 3,
+              "day": 1
+            },
+            "approximate": false
+          },
+          "sexagenary": {
+            "payload": {
+              "stem": "bing",
+              "branch": "wu",
+              "cycle_index": 43,
+              "stem_label": "丙",
+              "branch_label": "午",
+              "display": "丙午",
+              "locale": "zh-Hans"
+            },
+            "approximate": true
+          },
+          "solar_term_24": {
+            "payload": {
+              "current_term": "rain_water",
+              "current_term_date": "2026-02-19",
+              "next_term": "awakening_of_insects",
+              "next_term_date": "2026-03-06",
+              "days_to_next": 5,
+              "current_term_label": "雨水",
+              "next_term_label": "惊蛰",
+              "display": "雨水 -> 惊蛰",
+              "locale": "zh-Hans"
+            },
+            "approximate": true
+          },
+          "chinese_lunar": {
+            "payload": {
+              "lunar_year": 2026,
+              "lunar_month": 1,
+              "lunar_day": 13,
+              "is_leap_month": false
+            },
+            "approximate": false
+          }
+        },
+        "unavailable_targets": []
+      }
+    },
+    "now": {
+      "bridge_date_gregorian": {
+        "year": 2026,
+        "month": 3,
+        "day": 9
+      },
+      "projection": {
+        "targets": [
+          "iso_week",
+          "minguo",
+          "japanese_era",
+          "sexagenary",
+          "solar_term_24",
+          "chinese_lunar"
+        ],
+        "results": {
+          "iso_week": {
+            "payload": {
+              "iso_year": 2026,
+              "iso_week": 11,
+              "iso_weekday": 1
+            },
+            "approximate": false
+          },
+          "minguo": {
+            "payload": {
+              "year": 115,
+              "month": 3,
+              "day": 9
+            },
+            "approximate": false
+          },
+          "japanese_era": {
+            "payload": {
+              "era": "reiwa",
+              "era_year": 8,
+              "month": 3,
+              "day": 9
+            },
+            "approximate": false
+          },
+          "sexagenary": {
+            "payload": {
+              "stem": "bing",
+              "branch": "wu",
+              "cycle_index": 43,
+              "stem_label": "丙",
+              "branch_label": "午",
+              "display": "丙午",
+              "locale": "zh-Hans"
+            },
+            "approximate": true
+          },
+          "solar_term_24": {
+            "payload": {
+              "current_term": "awakening_of_insects",
+              "current_term_date": "2026-03-06",
+              "next_term": "spring_equinox",
+              "next_term_date": "2026-03-21",
+              "days_to_next": 12,
+              "current_term_label": "惊蛰",
+              "next_term_label": "春分",
+              "display": "惊蛰 -> 春分",
+              "locale": "zh-Hans"
+            },
+            "approximate": true
+          },
+          "chinese_lunar": {
+            "payload": {
+              "lunar_year": 2026,
+              "lunar_month": 1,
+              "lunar_day": 21,
+              "is_leap_month": false
+            },
+            "approximate": false
+          }
+        },
+        "unavailable_targets": []
+      }
+    }
+  },
+  "world_context": {
+    "scene_prompt": "At local time 2026-03-09T18:30:00+08:00, in 南京·秦淮河, continue the life timeline of 18岁女儿 with stable memory continuity. Background: 春季夜游 Weather now: rain_slight, 9.4C. Scenery: 夜色与河道灯影",
+    "continuity_rules": [
+      "Never jump backwards in timeline ticks.",
+      "Keep role/soul stable unless explicitly updated by user.",
+      "Use space context as default world anchor."
+    ],
+    "next_actions": [
+      "Generate next short life update from now_instant.",
+      "Append update into long-term memory with tick_timestamp.",
+      "If media intent appears, attach this context as generation seed."
+    ]
+  },
+  "warnings": []
+}

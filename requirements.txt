@@ -13,3 +13,7 @@ pydantic>=2.7.0,<3.0.0
 lunardate>=0.2.2
 convertdate>=2.4.0
 lunar-python>=1.4.4
+
+# Optional testing helpers
+pytest>=8.0.0
+httpx>=0.27.0

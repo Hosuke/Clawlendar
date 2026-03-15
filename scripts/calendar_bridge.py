@@ -196,6 +196,11 @@ def parse_args() -> argparse.Namespace:
         default="en",
         help="Locale tag for localized labels (example: zh-CN, zh-TW)",
     )
+    life_context.add_argument(
+        "--no-auto-weather",
+        action="store_true",
+        help="Disable automatic weather enrichment even when latitude/longitude are provided",
+    )
     return parser.parse_args()
 
 
@@ -324,6 +329,7 @@ def main() -> int:
                 subject_payload=subject_payload,
                 targets=targets,
                 locale=args.locale,
+                auto_weather=not bool(args.no_auto_weather),
             )
         else:
             raise CalendarError(f"Unsupported command: {args.command}")

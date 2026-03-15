@@ -3,15 +3,15 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://127.0.0.1:8000}"
 
-echo "[1/7] GET /health"
+echo "[1/8] GET /health"
 curl -sS "${BASE_URL}/health" | python3 -m json.tool
 echo
 
-echo "[2/7] GET /capabilities"
+echo "[2/8] GET /capabilities"
 curl -sS "${BASE_URL}/capabilities" | python3 -m json.tool
 echo
 
-echo "[3/7] POST /convert"
+echo "[3/8] POST /convert"
 curl -sS -X POST "${BASE_URL}/convert" \
   -H "Content-Type: application/json" \
   -d '{
@@ -22,7 +22,7 @@ curl -sS -X POST "${BASE_URL}/convert" \
   }' | python3 -m json.tool
 echo
 
-echo "[4/7] POST /timeline"
+echo "[4/8] POST /timeline"
 curl -sS -X POST "${BASE_URL}/timeline" \
   -H "Content-Type: application/json" \
   -d '{
@@ -34,7 +34,7 @@ curl -sS -X POST "${BASE_URL}/timeline" \
   }' | python3 -m json.tool
 echo
 
-echo "[5/7] POST /astro"
+echo "[5/8] POST /astro"
 curl -sS -X POST "${BASE_URL}/astro" \
   -H "Content-Type: application/json" \
   -d '{
@@ -44,7 +44,7 @@ curl -sS -X POST "${BASE_URL}/astro" \
   }' | python3 -m json.tool
 echo
 
-echo "[6/7] POST /day-profile"
+echo "[6/8] POST /day-profile"
 curl -sS -X POST "${BASE_URL}/day-profile" \
   -H "Content-Type: application/json" \
   -d '{
@@ -57,10 +57,35 @@ curl -sS -X POST "${BASE_URL}/day-profile" \
   }' | python3 -m json.tool
 echo
 
-echo "[7/7] POST /calendar-month (minguo example)"
+echo "[7/8] POST /calendar-month (minguo example)"
 curl -sS -X POST "${BASE_URL}/calendar-month" \
   -H "Content-Type: application/json" \
   -d '{
     "source": "minguo",
     "month_payload": {"year": 115, "month": 3}
+  }' | python3 -m json.tool
+echo
+
+echo "[8/8] POST /life-context"
+curl -sS -X POST "${BASE_URL}/life-context" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "birth_input_payload": {"iso_datetime": "2026-03-01T09:00:00+08:00"},
+    "now_input_payload": {"iso_datetime": "2026-03-09T18:30:00+08:00"},
+    "timezone": "Asia/Taipei",
+    "space_payload": {
+      "location_name": "南京·秦淮河",
+      "latitude": 32.0366,
+      "longitude": 118.7895,
+      "background": "春季夜游",
+      "climate": "humid subtropical",
+      "scenery_note": "夜色与河道灯影"
+    },
+    "subject_payload": {
+      "entity_id": "lobster-001",
+      "role": "18岁女儿",
+      "soul": "温柔且主动问候"
+    },
+    "locale": "zh-CN",
+    "auto_weather": true
   }' | python3 -m json.tool

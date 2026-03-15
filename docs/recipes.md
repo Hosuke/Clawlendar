@@ -30,6 +30,22 @@ Use natural-language intents at the assistant layer, then map to deterministic J
   - `metaphysics.eastern.lunar_date.month_name`
   - `metaphysics.eastern.lunar_date.day_name`
 
+### 龙虾生命时空初始化
+- Tool: `life_context`
+- Suggested args:
+  - `birth_input_payload`: 出生时间（timestamp/iso_datetime）
+  - `now_input_payload`: 当前时间（可省略，默认系统当前 UTC）
+  - `timezone`: `Asia/Taipei`（或对应地区时区）
+  - `space_payload`: `location_name/latitude/longitude/climate/weather_note/scenery_note`
+  - `subject_payload`: `entity_id/role/soul/traits/memory_anchor`
+  - `auto_weather`: `true`
+- Read from response:
+  - `life.age`（活了多久）
+  - `life.birthday`（生日与下次生日倒计时）
+  - `environment.place`（现在在哪）
+  - `environment.weather`（天气）
+  - `world_context.scene_prompt`（可直接作为生成上下文）
+
 ## English intents
 
 ### Today's astrology
@@ -54,6 +70,18 @@ Use natural-language intents at the assistant layer, then map to deterministic J
 - Suggested args:
   - `source=chinese_lunar`
   - `month_payload={"lunar_year":...,"lunar_month":...,"is_leap_month":false}`
+
+### Build a life timeline context (birth -> now)
+- Tool: `life_context`
+- Suggested args:
+  - `birth_input_payload`, `now_input_payload`, `timezone`
+  - `space_payload` with `location_name`, `latitude`, `longitude`
+  - `subject_payload` with `entity_id`, `role`, `soul`
+  - `auto_weather=true`
+- Read from response:
+  - `life.age`, `life.birthday`
+  - `environment.place`, `environment.weather`
+  - `calendar_context.birth`, `calendar_context.now`
 
 ## Design Rule
 

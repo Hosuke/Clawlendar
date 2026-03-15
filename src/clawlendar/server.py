@@ -207,6 +207,7 @@ def life_context(
     subject_payload: Optional[Dict[str, Any]] = None,
     targets: Optional[List[str]] = None,
     locale: str = "en",
+    auto_weather: bool = True,
 ) -> str:
     """Build continuity-safe world context for one lifeform from birth->now with time+space+subject anchors."""
     try:
@@ -221,6 +222,7 @@ def life_context(
             subject_payload=subject_payload,
             targets=targets,
             locale=locale,
+            auto_weather=auto_weather,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:

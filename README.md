@@ -43,6 +43,13 @@ python3 -m pip install -r requirements.txt
 
 - Frontend demo: https://clawlendar-web.vercel.app/
 
+## Agent Access Pattern (Vercel + JSON API)
+
+- Use Vercel frontend for human entry and discovery.
+- Use JSON API (`/life-context`, `/day-profile`, etc.) for agent-to-agent integration.
+- Recommended: add `/api/*` proxy routes in `clawlendar-web` that forward to your Clawlendar backend.
+- Guide: [`docs/vercel-agent-gateway.md`](docs/vercel-agent-gateway.md)
+
 ## GitHub Pages Showcase
 
 This repo includes a showcase page at `docs/index.html` for GitHub Pages.
@@ -99,6 +106,7 @@ claude mcp add clawlendar -- clawlendar
 1. `Convert 2026-03-09 (Gregorian) into Minguo, Japanese era, and sexagenary.`
 2. `Given timestamp 1773014400 in Asia/Taipei, return day profile with Bazi/Huangli and moon phase.`
 3. `Show the true month boundary days for Chinese lunar month 2026-01 (non-leap).`
+4. `Build life context from birth to now with location/weather and identity anchors.`
 
 ## Documentation
 
@@ -107,6 +115,7 @@ claude mcp add clawlendar -- clawlendar
 - Intent recipes (CN/EN): [`docs/recipes.md`](docs/recipes.md)
 - Locale and I18N notes: [`docs/i18n.md`](docs/i18n.md)
 - Full JSON examples: [`docs/examples/`](docs/examples/)
+- Vercel gateway design: [`docs/vercel-agent-gateway.md`](docs/vercel-agent-gateway.md)
 
 ## JSON Contract + Higher-level UX
 
@@ -129,7 +138,7 @@ Once connected, Claude has access to seven tools:
 | `astro_snapshot` | Return seven governors, four remainders, and major aspects (approximate) |
 | `calendar_month` | Resolve true month boundaries and day list for non-Gregorian month mode |
 | `day_profile` | One-call day details: calendar profile + optional astro + optional Eastern/Western metaphysics |
-| `life_context` | Build continuity-safe world context from birth time + now + space + subject anchors |
+| `life_context` | Build continuity-safe world context from birth time + now + space + subject anchors, with birthday/age and optional weather enrichment |
 
 ## Supported Calendars
 
@@ -201,9 +210,43 @@ python3 scripts/calendar_bridge.py life-context \
   --birth-input-json '{"iso_datetime":"2026-03-01T09:00:00+08:00"}' \
   --now-input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
   --timezone 'Asia/Taipei' \
-  --space-json '{"location_name":"南京·秦淮河","background":"春季夜游","environment_tags":["city","river"]}' \
+  --space-json '{"location_name":"南京·秦淮河","latitude":32.0366,"longitude":118.7895,"background":"春季夜游","climate":"humid subtropical","scenery_note":"夜色与河道灯影","environment_tags":["city","river"]}' \
   --subject-json '{"entity_id":"lobster-001","role":"18岁女儿","soul":"温柔且主动问候"}' \
   --locale zh-CN
+```
+
+## Sample Response (Life Context)
+
+Run:
+
+```bash
+python3 scripts/calendar_bridge.py life-context \
+  --birth-input-json '{"iso_datetime":"2026-03-01T09:00:00+08:00"}' \
+  --now-input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
+  --timezone 'Asia/Taipei' \
+  --space-json '{"location_name":"南京·秦淮河","latitude":32.0366,"longitude":118.7895}' \
+  --subject-json '{"entity_id":"lobster-001","role":"18岁女儿"}' \
+  --locale zh-CN
+```
+
+Returned fields (excerpt):
+
+```json
+{
+  "command": "life_context",
+  "life": {
+    "life_id": "lobster-001",
+    "age": {"readable": "8d 9h 30m", "stage": "juvenile"},
+    "birthday": {"month": 3, "day": 1, "days_until_next_birthday": 357}
+  },
+  "environment": {
+    "place": {"location_name": "南京·秦淮河"},
+    "weather": {"provider": "open_meteo", "weather_label": "<dynamic>"}
+  },
+  "world_context": {
+    "scene_prompt": "..."
+  }
+}
 ```
 
 ## Sample Response (Huangli / 吉凶)
@@ -307,6 +350,7 @@ references/
 - When `lunar_python` is unavailable, Bazi/Huangli uses internal approximation fallback.
 - `sexagenary` and `solar_term_24` keep stable machine keys and add localized display fields via `locale` (`zh-CN`, `zh-TW`, etc.).
 - Some calendars are available only when optional dependencies are installed.
+- `life_context` weather enrichment is best effort (network/provider dependent) and should be treated as contextual reference, not a certified meteorological record.
 
 ## Privacy Policy
 
@@ -367,4 +411,5 @@ pip install clawlendar
 - 干支（近似）、二十四节气（近似）
 - 干支/节气支持本地化显示（可传 `locale=zh-CN` 或 `locale=zh-TW`，同时保留机器可读 key）
 - `day_profile` 支持输出：八字、老黄历（宜忌/彭祖/冲煞）、西方日课（月相/行星状态/星座）
+- `life_context` 支持输出：生命起始时间、当前时间、已存活时长、生日与下次生日倒计时、地点锚点、个体角色/性格锚点、可选天气增强
 - 可选：农历（`lunardate`）、伊斯兰历、希伯来历、波斯历（`convertdate`）

@@ -14,6 +14,7 @@ Live frontend demo:
 - `astro_snapshot.json`
 - `day_profile_zh_cn.json`
 - `day_profile_en.json`
+- `life_context_zh_cn.json`
 
 ## Re-generate
 
@@ -27,4 +28,5 @@ python3 scripts/calendar_bridge.py calendar-month --source chinese_lunar --month
 python3 scripts/calendar_bridge.py astro --input-json '{"timestamp":1773014400}' --timezone 'Asia/Taipei' > docs/examples/astro_snapshot.json
 python3 scripts/calendar_bridge.py day-profile --input-json '{"timestamp":1773014400}' --timezone 'Asia/Taipei' --locale zh-CN > docs/examples/day_profile_zh_cn.json
 python3 scripts/calendar_bridge.py day-profile --input-json '{"timestamp":1773014400}' --timezone 'America/New_York' --locale en > docs/examples/day_profile_en.json
+python3 scripts/calendar_bridge.py life-context --birth-input-json '{"iso_datetime":"2026-03-01T09:00:00+08:00"}' --now-input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' --timezone 'Asia/Taipei' --space-json '{"location_name":"南京·秦淮河","latitude":32.0366,"longitude":118.7895,"background":"春季夜游","climate":"humid subtropical","scenery_note":"夜色与河道灯影"}' --subject-json '{"entity_id":"lobster-001","role":"18岁女儿","soul":"温柔且主动问候"}' --locale zh-CN > docs/examples/life_context_zh_cn.json
 ```
