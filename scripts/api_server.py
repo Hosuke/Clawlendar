@@ -85,6 +85,32 @@ class DayProfileRequest(BaseModel):
     locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
 
 
+class LifeContextRequest(BaseModel):
+    birth_input_payload: Dict[str, Any] = Field(
+        ...,
+        description="Birth instant payload: timestamp/timestamp_ms/iso_datetime/local_datetime",
+    )
+    now_input_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional 'now' instant payload. Defaults to current UTC time.",
+    )
+    timezone: str = Field(default="UTC", description="IANA timezone")
+    date_basis: str = Field(default="local", description="'local' or 'utc'")
+    space_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Space anchor such as location_name/latitude/longitude/background/environment_tags",
+    )
+    subject_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Subject anchor such as entity_id/name/role/soul/traits/memory_anchor",
+    )
+    targets: Optional[List[str]] = Field(
+        default=None,
+        description="Optional timeline projection targets",
+    )
+    locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
@@ -168,6 +194,27 @@ def day_profile(payload: DayProfileRequest) -> Dict[str, Any]:
             date_basis=payload.date_basis,
             include_astro=payload.include_astro,
             include_metaphysics=payload.include_metaphysics,
+            locale=payload.locale,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/life-context")
+def life_context(payload: LifeContextRequest) -> Dict[str, Any]:
+    if payload.date_basis not in {"local", "utc"}:
+        raise HTTPException(status_code=400, detail="date_basis must be 'local' or 'utc'")
+    try:
+        return bridge.run_life_context(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            birth_input_payload=payload.birth_input_payload,
+            now_input_payload=payload.now_input_payload,
+            timezone_name=payload.timezone,
+            date_basis=payload.date_basis,
+            space_payload=payload.space_payload,
+            subject_payload=payload.subject_payload,
+            targets=payload.targets,
             locale=payload.locale,
         )
     except bridge.CalendarError as exc:

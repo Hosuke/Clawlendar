@@ -119,7 +119,7 @@ This separation keeps integrations stable while still supporting rich user-facin
 
 ## MCP Tools
 
-Once connected, Claude has access to six tools:
+Once connected, Claude has access to seven tools:
 
 | Tool | Description |
 |------|-------------|
@@ -129,6 +129,7 @@ Once connected, Claude has access to six tools:
 | `astro_snapshot` | Return seven governors, four remainders, and major aspects (approximate) |
 | `calendar_month` | Resolve true month boundaries and day list for non-Gregorian month mode |
 | `day_profile` | One-call day details: calendar profile + optional astro + optional Eastern/Western metaphysics |
+| `life_context` | Build continuity-safe world context from birth time + now + space + subject anchors |
 
 ## Supported Calendars
 
@@ -194,6 +195,15 @@ python3 scripts/calendar_bridge.py day-profile \
 python3 scripts/calendar_bridge.py calendar-month \
   --source minguo \
   --month-json '{"year":115,"month":3}'
+
+# Life context (birth -> now continuity context)
+python3 scripts/calendar_bridge.py life-context \
+  --birth-input-json '{"iso_datetime":"2026-03-01T09:00:00+08:00"}' \
+  --now-input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
+  --timezone 'Asia/Taipei' \
+  --space-json '{"location_name":"南京·秦淮河","background":"春季夜游","environment_tags":["city","river"]}' \
+  --subject-json '{"entity_id":"lobster-001","role":"18岁女儿","soul":"温柔且主动问候"}' \
+  --locale zh-CN
 ```
 
 ## Sample Response (Huangli / 吉凶)
@@ -238,7 +248,7 @@ pip install -e ".[api]"
 ./scripts/run_api.sh
 ```
 
-Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month`
+Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context`
 
 ```bash
 # Smoke test

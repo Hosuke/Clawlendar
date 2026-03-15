@@ -20,6 +20,7 @@ from clawlendar.bridge import (
     run_capabilities,
     run_convert,
     run_day_profile,
+    run_life_context,
     run_timeline,
 )
 
@@ -189,6 +190,36 @@ def day_profile(
             date_basis=date_basis,
             include_astro=include_astro,
             include_metaphysics=include_metaphysics,
+            locale=locale,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool(title="Life Context", annotations=READ_ONLY_TOOL)
+def life_context(
+    birth_input_payload: Dict[str, Any],
+    now_input_payload: Optional[Dict[str, Any]] = None,
+    timezone: str = "UTC",
+    date_basis: str = "local",
+    space_payload: Optional[Dict[str, Any]] = None,
+    subject_payload: Optional[Dict[str, Any]] = None,
+    targets: Optional[List[str]] = None,
+    locale: str = "en",
+) -> str:
+    """Build continuity-safe world context for one lifeform from birth->now with time+space+subject anchors."""
+    try:
+        result = run_life_context(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            birth_input_payload=birth_input_payload,
+            now_input_payload=now_input_payload,
+            timezone_name=timezone,
+            date_basis=date_basis,
+            space_payload=space_payload,
+            subject_payload=subject_payload,
+            targets=targets,
             locale=locale,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)

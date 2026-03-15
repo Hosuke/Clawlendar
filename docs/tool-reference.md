@@ -82,6 +82,24 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
   - `metaphysics.eastern.lunar_date.month_name/day_name` (when `lunar_python` available)
   - `metaphysics.western`
 
+## life_context
+
+- Purpose: generate continuity-safe world context for one lifeform from birth instant to now.
+- Input:
+  - `birth_input_payload` (required instant payload)
+  - `now_input_payload` (optional instant payload; defaults to current UTC)
+  - `timezone`
+  - `date_basis`
+  - `space_payload` (optional: location_name/latitude/longitude/background/environment_tags)
+  - `subject_payload` (optional: entity_id/name/role/soul/traits/memory_anchor)
+  - `targets` (optional projection calendars)
+  - `locale`
+- Output highlights:
+  - `life.age` (`seconds`, `days`, `readable`, `stage`)
+  - `calendar_context.birth` and `calendar_context.now`
+  - `world_context.scene_prompt`
+  - `world_context.continuity_rules`
+
 ## Stability Notes
 
 - Stable machine keys are preferred; localized display fields are additive.

@@ -1154,6 +1154,7 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "astro_snapshot": True,
             "calendar_month": True,
             "day_profile": True,
+            "life_context": True,
         },
         "metaphysics": {
             "supported": True,
@@ -1294,6 +1295,88 @@ def parse_instant_payload(payload: Dict[str, Any], timezone: dt.tzinfo) -> dt.da
     raise CalendarError(
         "input payload must include one of: timestamp, timestamp_ms, iso_datetime, local_datetime"
     )
+
+
+def build_instant_view(instant_utc: dt.datetime, timezone: dt.tzinfo) -> Dict[str, Any]:
+    instant_local = instant_utc.astimezone(timezone)
+    utc_offset = instant_local.utcoffset()
+    utc_offset_seconds = int(utc_offset.total_seconds()) if utc_offset is not None else 0
+    return {
+        "timestamp": instant_utc.timestamp(),
+        "timestamp_ms": int(round(instant_utc.timestamp() * 1000)),
+        "iso_utc": instant_utc.isoformat(),
+        "iso_local": instant_local.isoformat(),
+        "utc_offset_seconds": utc_offset_seconds,
+    }
+
+
+def life_stage_from_age_days(age_days: float) -> str:
+    if age_days < 1:
+        return "seed"
+    if age_days < 7:
+        return "early_growth"
+    if age_days < 90:
+        return "juvenile"
+    if age_days < 365:
+        return "mature"
+    return "legacy"
+
+
+def format_age_readable(total_seconds: int) -> str:
+    remaining = max(0, int(total_seconds))
+    days = remaining // 86400
+    remaining = remaining % 86400
+    hours = remaining // 3600
+    remaining = remaining % 3600
+    minutes = remaining // 60
+    seconds = remaining % 60
+    chunks = []
+    if days:
+        chunks.append(f"{days}d")
+    if hours:
+        chunks.append(f"{hours}h")
+    if minutes:
+        chunks.append(f"{minutes}m")
+    if seconds or not chunks:
+        chunks.append(f"{seconds}s")
+    return " ".join(chunks)
+
+
+def normalize_space_payload(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    source = payload if isinstance(payload, dict) else {}
+    location_name = str(source.get("location_name") or source.get("location") or "").strip()
+    environment_tags = source.get("environment_tags")
+    if not isinstance(environment_tags, list):
+        environment_tags = []
+    normalized_tags = [str(item).strip() for item in environment_tags if str(item).strip()]
+    latitude = source.get("latitude")
+    longitude = source.get("longitude")
+    lat_value = to_float(latitude, "latitude") if latitude is not None else None
+    lon_value = to_float(longitude, "longitude") if longitude is not None else None
+    return {
+        "location_name": location_name or None,
+        "timezone": str(source.get("timezone") or "").strip() or None,
+        "latitude": lat_value,
+        "longitude": lon_value,
+        "environment_tags": normalized_tags,
+        "background": str(source.get("background") or "").strip() or None,
+    }
+
+
+def normalize_subject_payload(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    source = payload if isinstance(payload, dict) else {}
+    traits = source.get("traits")
+    if not isinstance(traits, list):
+        traits = []
+    normalized_traits = [str(item).strip() for item in traits if str(item).strip()]
+    return {
+        "entity_id": str(source.get("entity_id") or source.get("uid") or "").strip() or None,
+        "name": str(source.get("name") or "").strip() or None,
+        "role": str(source.get("role") or "").strip() or None,
+        "soul": str(source.get("soul") or "").strip() or None,
+        "traits": normalized_traits,
+        "memory_anchor": str(source.get("memory_anchor") or "").strip() or None,
+    }
 
 
 def normalize_degrees(value: float) -> float:
@@ -1667,6 +1750,143 @@ def run_timeline(
             "unavailable_targets": conversion["unavailable_targets"],
         },
         "warnings": sorted(set(timeline_warnings + conversion["warnings"])),
+    }
+
+
+def run_life_context(
+    registry: Dict[str, CalendarAdapter],
+    warnings: List[str],
+    birth_input_payload: Dict[str, Any],
+    now_input_payload: Optional[Dict[str, Any]] = None,
+    timezone_name: str = "UTC",
+    date_basis: str = "local",
+    space_payload: Optional[Dict[str, Any]] = None,
+    subject_payload: Optional[Dict[str, Any]] = None,
+    targets: Optional[List[str]] = None,
+    locale: Optional[str] = None,
+) -> Dict[str, Any]:
+    if date_basis not in {"local", "utc"}:
+        raise CalendarError("date_basis must be 'local' or 'utc'")
+
+    timezone = get_timezone(timezone_name)
+    locale_tag = normalize_locale_tag(locale)
+
+    birth_utc = parse_instant_payload(birth_input_payload, timezone)
+    if now_input_payload is None:
+        now_utc = dt.datetime.now(tz=dt.timezone.utc)
+        now_payload: Dict[str, Any] = {"timestamp": now_utc.timestamp()}
+    else:
+        if not isinstance(now_input_payload, dict):
+            raise CalendarError("now_input_payload must be a JSON object")
+        now_payload = now_input_payload
+        now_utc = parse_instant_payload(now_payload, timezone)
+
+    if now_utc < birth_utc:
+        raise CalendarError("now_input_payload instant must be >= birth_input_payload instant")
+
+    default_targets = [
+        "iso_week",
+        "minguo",
+        "japanese_era",
+        "sexagenary",
+        "solar_term_24",
+        "chinese_lunar",
+    ]
+    projection_targets = targets if targets is not None else [name for name in default_targets if name in registry]
+
+    birth_timeline = run_timeline(
+        registry=registry,
+        warnings=warnings,
+        input_payload=birth_input_payload,
+        timezone_name=timezone_name,
+        date_basis=date_basis,
+        targets=projection_targets,
+        locale=locale_tag,
+    )
+    now_timeline = run_timeline(
+        registry=registry,
+        warnings=warnings,
+        input_payload=now_payload,
+        timezone_name=timezone_name,
+        date_basis=date_basis,
+        targets=projection_targets,
+        locale=locale_tag,
+    )
+
+    age_seconds = max(0, int(round((now_utc - birth_utc).total_seconds())))
+    age_days = age_seconds / 86400.0
+    age_hours = age_seconds / 3600.0
+    age_minutes = age_seconds / 60.0
+    life_stage = life_stage_from_age_days(age_days)
+
+    normalized_space = normalize_space_payload(space_payload)
+    normalized_subject = normalize_subject_payload(subject_payload)
+    life_id = normalized_subject["entity_id"] or f"LIFE-{int(birth_utc.timestamp())}"
+
+    role = normalized_subject.get("role") or "digital lifeform"
+    soul = normalized_subject.get("soul") or "continuity-first and adaptive"
+    location_name = normalized_space.get("location_name") or "unanchored-space"
+    seed_brief = (
+        f"{role} @ {location_name} | stage={life_stage} | age={format_age_readable(age_seconds)} | soul={soul}"
+    )
+
+    scene_prompt = (
+        f"At local time {now_timeline['instant']['iso_local']}, in {location_name}, "
+        f"continue the life timeline of {role} with stable memory continuity."
+    )
+    if normalized_space.get("background"):
+        scene_prompt = f"{scene_prompt} Background: {normalized_space['background']}"
+
+    return {
+        "command": "life_context",
+        "time_model": "timestamp_first",
+        "timezone": timezone_name,
+        "date_basis": date_basis,
+        "locale": locale_tag,
+        "life": {
+            "life_id": life_id,
+            "birth_instant": build_instant_view(birth_utc, timezone),
+            "now_instant": build_instant_view(now_utc, timezone),
+            "age": {
+                "seconds": age_seconds,
+                "minutes": round(age_minutes, 3),
+                "hours": round(age_hours, 3),
+                "days": round(age_days, 6),
+                "readable": format_age_readable(age_seconds),
+                "stage": life_stage,
+            },
+            "continuity": {
+                "birth_before_now": True,
+                "tick_timestamp": int(now_utc.timestamp()),
+                "seed_brief": seed_brief,
+            },
+        },
+        "space": normalized_space,
+        "subject": normalized_subject,
+        "calendar_context": {
+            "birth": {
+                "bridge_date_gregorian": birth_timeline["bridge_date_gregorian"],
+                "projection": birth_timeline["calendar_projection"],
+            },
+            "now": {
+                "bridge_date_gregorian": now_timeline["bridge_date_gregorian"],
+                "projection": now_timeline["calendar_projection"],
+            },
+        },
+        "world_context": {
+            "scene_prompt": scene_prompt,
+            "continuity_rules": [
+                "Never jump backwards in timeline ticks.",
+                "Keep role/soul stable unless explicitly updated by user.",
+                "Use space context as default world anchor.",
+            ],
+            "next_actions": [
+                "Generate next short life update from now_instant.",
+                "Append update into long-term memory with tick_timestamp.",
+                "If media intent appears, attach this context as generation seed.",
+            ],
+        },
+        "warnings": sorted(set(warnings + birth_timeline["warnings"] + now_timeline["warnings"])),
     }
 
 

@@ -19,6 +19,7 @@ from clawlendar.bridge import (
     run_capabilities,
     run_convert,
     run_day_profile,
+    run_life_context,
     run_timeline,
 )
 
@@ -149,6 +150,52 @@ def parse_args() -> argparse.Namespace:
         default="en",
         help="Locale tag for localized labels (example: zh-CN, zh-TW)",
     )
+
+    life_context = sub.add_parser(
+        "life-context",
+        help="Build continuity-safe life context using birth time + now + space + subject anchors",
+    )
+    life_context.add_argument(
+        "--birth-input-json",
+        required=True,
+        help="JSON object for birth instant payload",
+    )
+    life_context.add_argument(
+        "--now-input-json",
+        required=False,
+        help="Optional JSON object for current instant payload. Defaults to current UTC.",
+    )
+    life_context.add_argument(
+        "--timezone",
+        default="UTC",
+        help="IANA timezone for local interpretation and output (default: UTC)",
+    )
+    life_context.add_argument(
+        "--date-basis",
+        choices=["local", "utc"],
+        default="local",
+        help="Choose local or UTC date basis for projection",
+    )
+    life_context.add_argument(
+        "--space-json",
+        required=False,
+        help="Optional JSON object for space anchor",
+    )
+    life_context.add_argument(
+        "--subject-json",
+        required=False,
+        help="Optional JSON object for subject anchor",
+    )
+    life_context.add_argument(
+        "--targets",
+        required=False,
+        help="Optional comma-separated target calendars for birth/now projection",
+    )
+    life_context.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag for localized labels (example: zh-CN, zh-TW)",
+    )
     return parser.parse_args()
 
 
@@ -228,6 +275,54 @@ def main() -> int:
                 date_basis=args.date_basis,
                 include_astro=not bool(args.no_astro),
                 include_metaphysics=not bool(args.no_metaphysics),
+                locale=args.locale,
+            )
+        elif args.command == "life-context":
+            try:
+                birth_input_payload = json.loads(args.birth_input_json)
+                if not isinstance(birth_input_payload, dict):
+                    raise CalendarError("--birth-input-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --birth-input-json: {exc}") from exc
+
+            now_input_payload = None
+            if args.now_input_json:
+                try:
+                    now_input_payload = json.loads(args.now_input_json)
+                    if not isinstance(now_input_payload, dict):
+                        raise CalendarError("--now-input-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --now-input-json: {exc}") from exc
+
+            space_payload = None
+            if args.space_json:
+                try:
+                    space_payload = json.loads(args.space_json)
+                    if not isinstance(space_payload, dict):
+                        raise CalendarError("--space-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --space-json: {exc}") from exc
+
+            subject_payload = None
+            if args.subject_json:
+                try:
+                    subject_payload = json.loads(args.subject_json)
+                    if not isinstance(subject_payload, dict):
+                        raise CalendarError("--subject-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --subject-json: {exc}") from exc
+
+            targets = normalize_targets(args.targets) if args.targets else None
+            output = run_life_context(
+                registry=registry,
+                warnings=warnings,
+                birth_input_payload=birth_input_payload,
+                now_input_payload=now_input_payload,
+                timezone_name=args.timezone,
+                date_basis=args.date_basis,
+                space_payload=space_payload,
+                subject_payload=subject_payload,
+                targets=targets,
                 locale=args.locale,
             )
         else:
