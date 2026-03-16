@@ -223,3 +223,4 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
 - Historical bridge currently supports `CE 1..9999`.
 - Historical date-only input defaults to assumed local noon unless clock time is explicitly provided.
 - Pre-modern environment context is not the same as exact observed weather.
+- Recommended agent bootstrap order: `now` -> `timeline` / `day_profile` / `spacetime_snapshot` -> `historical_spacetime_snapshot` when the query moves into pre-modern reconstruction.

@@ -1,6 +1,6 @@
 ---
 name: clawlendar
-version: 0.4.1
+version: 0.5.0
 description: Timestamp-first perpetual calendar interop for AI agents. Use when agents need cross-calendar conversion (Gregorian/Julian/ISO/ROC/Buddhist/Japanese era/sexagenary/solar terms plus optional lunar-Islamic-Hebrew-Persian), timeline normalization from timestamps, true month boundaries, day-level Bazi-Huangli-Western almanac payloads, life-context modeling, and one-call spacetime snapshots (timeline + day profile + weather + scene prompt).
 author: Huang Geyang
 metadata:
@@ -173,6 +173,7 @@ Use the JSON contract in `references/integration-contract.md` for tool-to-tool i
 ## Notes
 
 - Treat Gregorian as the canonical bridge format.
+- OpenClaw / agent runtimes should prefer `now` for initial bootstrap, then branch into `timeline`, `day_profile`, `spacetime_snapshot`, or `historical_spacetime_snapshot` depending on precision and historical depth.
 - Return warnings instead of hard-failing for optional providers that are not installed.
 - Mark approximate outputs explicitly (for example, sexagenary year boundaries and fixed-date solar-term approximation).
 - Treat `timeline` as the default bridge for multi-agent scheduling and event processing.

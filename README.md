@@ -107,6 +107,8 @@ claude mcp add clawlendar -- clawlendar
 2. `Given timestamp 1773014400 in Asia/Taipei, return day profile with Bazi/Huangli and moon phase.`
 3. `Show the true month boundary days for Chinese lunar month 2026-01 (non-leap).`
 4. `Build life context from birth to now with location/weather and identity anchors.`
+5. `Tell me what time it is now in Asia/Taipei and project it into East/West calendar systems.`
+6. `Resolve 1400-03-10 (Julian) in Florence into a historical spacetime snapshot with provenance.`
 
 ## Documentation
 
@@ -125,6 +127,18 @@ Clawlendar keeps MCP outputs JSON-first for agent interoperability.
 - Assistant layer: optional natural-language UX such as `/今日吉凶` or `today's astrology`, mapped to tool calls.
 
 This separation keeps integrations stable while still supporting rich user-facing prompts.
+
+## OpenClaw / Agent Usage
+
+Recommended agent flow:
+
+1. Call `now` to bootstrap the current instant for a visitor or newly initialized agent.
+2. Call `timeline` for strict timestamp-first conversions.
+3. Call `day_profile` when you need lunar/Bazi/Huangli or Western almanac context.
+4. Call `spacetime_snapshot` for one-call modern context with subject/place continuity.
+5. Call `historical_spacetime_snapshot` for pre-modern scenes with explicit `uncertainty` and `provenance`.
+
+This keeps OpenClaw and other agent runtimes on a stable JSON contract while still allowing higher-level natural-language prompts.
 
 ## MCP Tools
 
@@ -393,6 +407,9 @@ Endpoints: `GET /health` · `GET /capabilities` · `GET /now` · `POST /now` · 
 ```bash
 # Smoke test
 ./scripts/curl_examples.sh
+
+# Lightweight current-time bootstrap
+curl -sS 'http://127.0.0.1:8000/now?timezone=Asia/Taipei&locale=zh-CN' | python3 -m json.tool
 
 # Convert a date
 curl -sS -X POST http://127.0.0.1:8000/convert \

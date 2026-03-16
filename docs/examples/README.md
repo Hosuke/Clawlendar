@@ -8,6 +8,7 @@ Live frontend demo:
 ## Files
 
 - `capabilities.json`
+- `now_zh_cn.json`
 - `convert_zh_tw.json`
 - `timeline_en.json`
 - `calendar_month_chinese_lunar.json`
@@ -23,6 +24,7 @@ Run from repository root:
 
 ```bash
 python3 scripts/calendar_bridge.py capabilities > docs/examples/capabilities.json
+python3 scripts/calendar_bridge.py now --timezone 'Asia/Taipei' --targets minguo,sexagenary,solar_term_24 --locale zh-CN > docs/examples/now_zh_cn.json
 python3 scripts/calendar_bridge.py convert --source gregorian --targets julian,iso_week,minguo,buddhist,japanese_era,sexagenary,solar_term_24,chinese_lunar,islamic,hebrew,persian --date-json '{"year": 2026, "month": 3, "day": 9}' --locale zh-TW > docs/examples/convert_zh_tw.json
 python3 scripts/calendar_bridge.py timeline --input-json '{"timestamp":1773014400}' --timezone 'Asia/Taipei' --date-basis local --targets minguo,japanese_era,sexagenary,solar_term_24,chinese_lunar --locale en > docs/examples/timeline_en.json
 python3 scripts/calendar_bridge.py calendar-month --source chinese_lunar --month-json '{"lunar_year":2026,"lunar_month":1,"is_leap_month":false}' > docs/examples/calendar_month_chinese_lunar.json

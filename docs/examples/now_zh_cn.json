@@ -1,0 +1,74 @@
+{
+  "command": "now",
+  "time_model": "timestamp_first",
+  "timezone": "Asia/Taipei",
+  "date_basis": "local",
+  "locale": "zh-Hans",
+  "instant": {
+    "timestamp": 1773669728.381329,
+    "timestamp_ms": 1773669728381,
+    "iso_utc": "2026-03-16T14:02:08.381329+00:00",
+    "iso_local": "2026-03-16T22:02:08.381329+08:00",
+    "utc_offset_seconds": 28800
+  },
+  "bridge_date_gregorian": {
+    "year": 2026,
+    "month": 3,
+    "day": 16
+  },
+  "temporal_context": {
+    "local_date": "2026-03-16",
+    "local_time": "22:02:08",
+    "weekday_index_mon0": 0,
+    "weekday_name_en": "Monday",
+    "is_weekend": false,
+    "day_of_year": 75,
+    "hemisphere": "unknown",
+    "season_meteorological": "spring"
+  },
+  "calendar_projection": {
+    "targets": [
+      "minguo",
+      "sexagenary",
+      "solar_term_24"
+    ],
+    "results": {
+      "minguo": {
+        "payload": {
+          "year": 115,
+          "month": 3,
+          "day": 16
+        },
+        "approximate": false
+      },
+      "sexagenary": {
+        "payload": {
+          "stem": "bing",
+          "branch": "wu",
+          "cycle_index": 43,
+          "stem_label": "丙",
+          "branch_label": "午",
+          "display": "丙午",
+          "locale": "zh-Hans"
+        },
+        "approximate": true
+      },
+      "solar_term_24": {
+        "payload": {
+          "current_term": "awakening_of_insects",
+          "current_term_date": "2026-03-06",
+          "next_term": "spring_equinox",
+          "next_term_date": "2026-03-21",
+          "days_to_next": 5,
+          "current_term_label": "惊蛰",
+          "next_term_label": "春分",
+          "display": "惊蛰 -> 春分",
+          "locale": "zh-Hans"
+        },
+        "approximate": true
+      }
+    },
+    "unavailable_targets": []
+  },
+  "warnings": []
+}
