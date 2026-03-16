@@ -108,6 +108,34 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
   - `world_context.scene_prompt`
   - `world_context.continuity_rules`
 
+## weather_now
+
+- Purpose: fetch weather for the current time at a given location.
+- Input:
+  - `location_payload` (must include `latitude` and `longitude`, optional `location_name` and `timezone`)
+  - `timezone` (fallback timezone)
+  - `locale`
+- Output highlights:
+  - `instant`
+  - `location`
+  - `temporal_context`
+  - `weather` (provider + mode + matched hour)
+
+## weather_at_time
+
+- Purpose: fetch weather nearest to a requested instant at a given location.
+- Input:
+  - `input_payload` (`timestamp` | `timestamp_ms` | `iso_datetime` | `local_datetime`)
+  - `location_payload` (must include `latitude` and `longitude`, optional `location_name` and `timezone`)
+  - `timezone` (fallback timezone)
+  - `locale`
+- Output highlights:
+  - `instant`
+  - `location`
+  - `temporal_context`
+  - `weather.requested_time_local`
+  - `weather.time_delta_minutes`
+
 ## Stability Notes
 
 - Stable machine keys are preferred; localized display fields are additive.

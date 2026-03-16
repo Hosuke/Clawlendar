@@ -1214,6 +1214,8 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "calendar_month": True,
             "day_profile": True,
             "life_context": True,
+            "weather_now": True,
+            "weather_at_time": True,
         },
         "life_context": {
             "supported": True,
@@ -1227,6 +1229,13 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
                 "weather_time_anchor": True,
             },
             "weather_provider": "open_meteo forecast + archive (best effort)",
+        },
+        "weather": {
+            "supported": True,
+            "provider": "open_meteo forecast + archive (best effort)",
+            "requires_location": ["latitude", "longitude"],
+            "time_anchor": "nearest hourly point to requested instant",
+            "commands": ["weather_now", "weather_at_time"],
         },
         "metaphysics": {
             "supported": True,
@@ -1745,6 +1754,92 @@ def build_environment_context(
             context_warnings.append(f"Weather enrichment unavailable: {exc}")
 
     return context, sorted(set(context_warnings))
+
+
+def build_weather_response(
+    warnings: List[str],
+    command: str,
+    instant_utc: dt.datetime,
+    timezone_name: str,
+    normalized_space: Dict[str, Any],
+    locale: Optional[str] = None,
+) -> Dict[str, Any]:
+    latitude = normalized_space.get("latitude")
+    longitude = normalized_space.get("longitude")
+    if latitude is None or longitude is None:
+        raise CalendarError("location payload must include numeric latitude and longitude")
+
+    weather_timezone_name = normalized_space.get("timezone") or timezone_name
+    weather_timezone = get_timezone(weather_timezone_name)
+    anchor_local = instant_utc.astimezone(weather_timezone)
+    locale_tag = normalize_locale_tag(locale)
+
+    environment_context, environment_warnings = build_environment_context(
+        normalized_space=normalized_space,
+        timezone_name=weather_timezone_name,
+        auto_weather=True,
+        anchor_local=anchor_local,
+    )
+    temporal_context = build_temporal_context(now_local=anchor_local, latitude=latitude)
+    weather_payload = environment_context.get("weather")
+
+    combined_warnings = list(warnings) + list(environment_warnings)
+    if weather_payload is None:
+        combined_warnings.append("Weather payload unavailable from provider.")
+
+    return {
+        "command": command,
+        "time_model": "timestamp_first",
+        "timezone": weather_timezone_name,
+        "requested_timezone": timezone_name,
+        "locale": locale_tag,
+        "instant": build_instant_view(instant_utc, weather_timezone),
+        "location": environment_context.get("place", {}),
+        "temporal_context": temporal_context,
+        "weather": weather_payload,
+        "weather_note": environment_context.get("weather_note"),
+        "warnings": sorted(set(combined_warnings)),
+    }
+
+
+def run_weather_at_time(
+    warnings: List[str],
+    input_payload: Dict[str, Any],
+    location_payload: Dict[str, Any],
+    timezone_name: str = "UTC",
+    locale: Optional[str] = None,
+) -> Dict[str, Any]:
+    timezone = get_timezone(timezone_name)
+    instant_utc = parse_instant_payload(input_payload, timezone)
+    normalized_space = normalize_space_payload(location_payload)
+    result = build_weather_response(
+        warnings=warnings,
+        command="weather_at_time",
+        instant_utc=instant_utc,
+        timezone_name=timezone_name,
+        normalized_space=normalized_space,
+        locale=locale,
+    )
+    result["input_payload"] = input_payload
+    return result
+
+
+def run_weather_now(
+    warnings: List[str],
+    location_payload: Dict[str, Any],
+    timezone_name: str = "UTC",
+    locale: Optional[str] = None,
+) -> Dict[str, Any]:
+    now_utc = dt.datetime.now(tz=dt.timezone.utc)
+    normalized_space = normalize_space_payload(location_payload)
+    return build_weather_response(
+        warnings=warnings,
+        command="weather_now",
+        instant_utc=now_utc,
+        timezone_name=timezone_name,
+        normalized_space=normalized_space,
+        locale=locale,
+    )
 
 
 def normalize_degrees(value: float) -> float:

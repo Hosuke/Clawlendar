@@ -3,15 +3,15 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://127.0.0.1:8000}"
 
-echo "[1/8] GET /health"
+echo "[1/10] GET /health"
 curl -sS "${BASE_URL}/health" | python3 -m json.tool
 echo
 
-echo "[2/8] GET /capabilities"
+echo "[2/10] GET /capabilities"
 curl -sS "${BASE_URL}/capabilities" | python3 -m json.tool
 echo
 
-echo "[3/8] POST /convert"
+echo "[3/10] POST /convert"
 curl -sS -X POST "${BASE_URL}/convert" \
   -H "Content-Type: application/json" \
   -d '{
@@ -22,7 +22,7 @@ curl -sS -X POST "${BASE_URL}/convert" \
   }' | python3 -m json.tool
 echo
 
-echo "[4/8] POST /timeline"
+echo "[4/10] POST /timeline"
 curl -sS -X POST "${BASE_URL}/timeline" \
   -H "Content-Type: application/json" \
   -d '{
@@ -34,7 +34,7 @@ curl -sS -X POST "${BASE_URL}/timeline" \
   }' | python3 -m json.tool
 echo
 
-echo "[5/8] POST /astro"
+echo "[5/10] POST /astro"
 curl -sS -X POST "${BASE_URL}/astro" \
   -H "Content-Type: application/json" \
   -d '{
@@ -44,7 +44,7 @@ curl -sS -X POST "${BASE_URL}/astro" \
   }' | python3 -m json.tool
 echo
 
-echo "[6/8] POST /day-profile"
+echo "[6/10] POST /day-profile"
 curl -sS -X POST "${BASE_URL}/day-profile" \
   -H "Content-Type: application/json" \
   -d '{
@@ -57,7 +57,7 @@ curl -sS -X POST "${BASE_URL}/day-profile" \
   }' | python3 -m json.tool
 echo
 
-echo "[7/8] POST /calendar-month (minguo example)"
+echo "[7/10] POST /calendar-month (minguo example)"
 curl -sS -X POST "${BASE_URL}/calendar-month" \
   -H "Content-Type: application/json" \
   -d '{
@@ -66,7 +66,7 @@ curl -sS -X POST "${BASE_URL}/calendar-month" \
   }' | python3 -m json.tool
 echo
 
-echo "[8/8] POST /life-context"
+echo "[8/10] POST /life-context"
 curl -sS -X POST "${BASE_URL}/life-context" \
   -H "Content-Type: application/json" \
   -d '{
@@ -88,4 +88,33 @@ curl -sS -X POST "${BASE_URL}/life-context" \
     },
     "locale": "zh-CN",
     "auto_weather": true
+  }' | python3 -m json.tool
+echo
+
+echo "[9/10] POST /weather-now"
+curl -sS -X POST "${BASE_URL}/weather-now" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "location_payload": {
+      "location_name": "Taipei",
+      "latitude": 25.033,
+      "longitude": 121.5654
+    },
+    "timezone": "Asia/Taipei",
+    "locale": "en"
+  }' | python3 -m json.tool
+echo
+
+echo "[10/10] POST /weather-at-time"
+curl -sS -X POST "${BASE_URL}/weather-at-time" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_payload": {"iso_datetime": "2026-03-09T18:30:00+08:00"},
+    "location_payload": {
+      "location_name": "Taipei",
+      "latitude": 25.033,
+      "longitude": 121.5654
+    },
+    "timezone": "Asia/Taipei",
+    "locale": "en"
   }' | python3 -m json.tool

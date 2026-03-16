@@ -18,6 +18,8 @@ from clawlendar.bridge import (  # noqa: E402
     run_day_profile,
     run_life_context,
     run_timeline,
+    run_weather_at_time,
+    run_weather_now,
 )
 
 
@@ -27,6 +29,8 @@ def test_capabilities_exposes_life_context_and_i18n() -> None:
 
     assert result["command"] == "capabilities"
     assert result["commands"]["life_context"] is True
+    assert result["commands"]["weather_now"] is True
+    assert result["commands"]["weather_at_time"] is True
     assert "zh-CN" in result["i18n"]["supported_locales"]
 
 
@@ -266,6 +270,60 @@ def test_life_context_weather_uses_now_anchor_and_temporal_context(monkeypatch: 
     assert result["environment"]["weather"]["requested_time_local"].startswith("2026-03-09T18:30:00")
     assert result["temporal_context"]["local_date"] == "2026-03-09"
     assert result["temporal_context"]["season_meteorological"] in {"spring", "summer", "autumn", "winter"}
+
+
+def test_weather_at_time_returns_time_anchored_payload(monkeypatch: pytest.MonkeyPatch) -> None:
+    _, warnings = make_registry()
+
+    def fake_weather_for_instant(
+        latitude: float,
+        longitude: float,
+        timezone_name: str,
+        anchor_local,
+    ) -> Dict[str, Any]:
+        assert latitude == 25.033
+        assert longitude == 121.5654
+        assert timezone_name == "Asia/Taipei"
+        assert anchor_local.isoformat().startswith("2026-03-09T18:30:00")
+        return {
+            "provider": "open_meteo",
+            "data_mode": "archive_reanalysis",
+            "time": "2026-03-09T18:00",
+            "requested_time_local": anchor_local.isoformat(),
+            "time_delta_minutes": 30,
+            "temperature_c": 20.5,
+            "apparent_temperature_c": 20.0,
+            "relative_humidity_pct": 70,
+            "precipitation_mm": 0.0,
+            "wind_speed_kmh": 5.0,
+            "weather_code": 1,
+            "weather_label": "mainly_clear",
+            "timezone": timezone_name,
+        }
+
+    monkeypatch.setattr(bridge_module, "fetch_open_meteo_weather_for_instant", fake_weather_for_instant)
+    result = run_weather_at_time(
+        warnings=warnings,
+        input_payload={"iso_datetime": "2026-03-09T18:30:00+08:00"},
+        location_payload={"location_name": "Taipei", "latitude": 25.033, "longitude": 121.5654},
+        timezone_name="Asia/Taipei",
+        locale="en",
+    )
+
+    assert result["command"] == "weather_at_time"
+    assert result["weather"]["data_mode"] == "archive_reanalysis"
+    assert result["weather"]["time_delta_minutes"] == 30
+    assert result["temporal_context"]["local_date"] == "2026-03-09"
+
+
+def test_weather_now_requires_lat_lon() -> None:
+    _, warnings = make_registry()
+    with pytest.raises(CalendarError):
+        run_weather_now(
+            warnings=warnings,
+            location_payload={"location_name": "unknown"},
+            timezone_name="Asia/Taipei",
+        )
 
 
 def test_calendar_month_mode_still_works_for_minguo() -> None:

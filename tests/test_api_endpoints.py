@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
+import scripts.api_server as api_module  # noqa: E402
 from scripts.api_server import app  # noqa: E402
 
 
@@ -28,6 +29,8 @@ def test_capabilities_endpoint_includes_life_context() -> None:
     data = resp.json()
     assert data["command"] == "capabilities"
     assert data["commands"]["life_context"] is True
+    assert data["commands"]["weather_now"] is True
+    assert data["commands"]["weather_at_time"] is True
 
 
 def test_convert_endpoint_basic() -> None:
@@ -121,3 +124,51 @@ def test_life_context_endpoint_rejects_reverse_time() -> None:
     )
     assert resp.status_code == 400
     assert "must be >=" in resp.json()["detail"]
+
+
+def test_weather_now_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_run_weather_now(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return {
+            "command": "weather_now",
+            "weather": {"provider": "open_meteo", "temperature_c": 22.3},
+            "location": {"location_name": "Taipei"},
+            "warnings": [],
+        }
+
+    monkeypatch.setattr(api_module.bridge, "run_weather_now", fake_run_weather_now)
+    resp = client.post(
+        "/weather-now",
+        json={
+            "location_payload": {"location_name": "Taipei", "latitude": 25.033, "longitude": 121.5654},
+            "timezone": "Asia/Taipei",
+            "locale": "en",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["command"] == "weather_now"
+    assert data["weather"]["temperature_c"] == 22.3
+
+
+def test_weather_at_time_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_run_weather_at_time(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return {
+            "command": "weather_at_time",
+            "weather": {"provider": "open_meteo", "time_delta_minutes": 15},
+            "warnings": [],
+        }
+
+    monkeypatch.setattr(api_module.bridge, "run_weather_at_time", fake_run_weather_at_time)
+    resp = client.post(
+        "/weather-at-time",
+        json={
+            "input_payload": {"iso_datetime": "2026-03-09T18:30:00+08:00"},
+            "location_payload": {"location_name": "Taipei", "latitude": 25.033, "longitude": 121.5654},
+            "timezone": "Asia/Taipei",
+            "locale": "en",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["command"] == "weather_at_time"
+    assert data["weather"]["time_delta_minutes"] == 15

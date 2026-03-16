@@ -115,6 +115,28 @@ class LifeContextRequest(BaseModel):
     )
 
 
+class WeatherNowRequest(BaseModel):
+    location_payload: Dict[str, Any] = Field(
+        ...,
+        description="Location payload with latitude/longitude and optional location_name/timezone metadata",
+    )
+    timezone: str = Field(default="UTC", description="Fallback timezone when location timezone is not provided")
+    locale: str = Field(default="en", description="Locale tag")
+
+
+class WeatherAtTimeRequest(BaseModel):
+    input_payload: Dict[str, Any] = Field(
+        ...,
+        description="One of timestamp/timestamp_ms/iso_datetime/local_datetime",
+    )
+    location_payload: Dict[str, Any] = Field(
+        ...,
+        description="Location payload with latitude/longitude and optional location_name/timezone metadata",
+    )
+    timezone: str = Field(default="UTC", description="Fallback timezone when location timezone is not provided")
+    locale: str = Field(default="en", description="Locale tag")
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
@@ -221,6 +243,33 @@ def life_context(payload: LifeContextRequest) -> Dict[str, Any]:
             targets=payload.targets,
             locale=payload.locale,
             auto_weather=payload.auto_weather,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/weather-now")
+def weather_now(payload: WeatherNowRequest) -> Dict[str, Any]:
+    try:
+        return bridge.run_weather_now(
+            warnings=WARNINGS,
+            location_payload=payload.location_payload,
+            timezone_name=payload.timezone,
+            locale=payload.locale,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/weather-at-time")
+def weather_at_time(payload: WeatherAtTimeRequest) -> Dict[str, Any]:
+    try:
+        return bridge.run_weather_at_time(
+            warnings=WARNINGS,
+            input_payload=payload.input_payload,
+            location_payload=payload.location_payload,
+            timezone_name=payload.timezone,
+            locale=payload.locale,
         )
     except bridge.CalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

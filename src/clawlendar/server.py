@@ -22,6 +22,8 @@ from clawlendar.bridge import (
     run_day_profile,
     run_life_context,
     run_timeline,
+    run_weather_at_time,
+    run_weather_now,
 )
 
 mcp = FastMCP(
@@ -223,6 +225,46 @@ def life_context(
             targets=targets,
             locale=locale,
             auto_weather=auto_weather,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool(title="Weather Now", annotations=READ_ONLY_TOOL)
+def weather_now(
+    location_payload: Dict[str, Any],
+    timezone: str = "UTC",
+    locale: str = "en",
+) -> str:
+    """Return weather at current time for a location (latitude/longitude required)."""
+    try:
+        result = run_weather_now(
+            warnings=WARNINGS,
+            location_payload=location_payload,
+            timezone_name=timezone,
+            locale=locale,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool(title="Weather At Time", annotations=READ_ONLY_TOOL)
+def weather_at_time(
+    input_payload: Dict[str, Any],
+    location_payload: Dict[str, Any],
+    timezone: str = "UTC",
+    locale: str = "en",
+) -> str:
+    """Return weather nearest to a requested instant for a location (latitude/longitude required)."""
+    try:
+        result = run_weather_at_time(
+            warnings=WARNINGS,
+            input_payload=input_payload,
+            location_payload=location_payload,
+            timezone_name=timezone,
+            locale=locale,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:

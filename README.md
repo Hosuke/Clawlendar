@@ -128,7 +128,7 @@ This separation keeps integrations stable while still supporting rich user-facin
 
 ## MCP Tools
 
-Once connected, Claude has access to seven tools:
+Once connected, Claude has access to nine tools:
 
 | Tool | Description |
 |------|-------------|
@@ -139,6 +139,8 @@ Once connected, Claude has access to seven tools:
 | `calendar_month` | Resolve true month boundaries and day list for non-Gregorian month mode |
 | `day_profile` | One-call day details: calendar profile + optional astro + optional Eastern/Western metaphysics |
 | `life_context` | Build continuity-safe world context from birth time + now + space + subject anchors, with birthday/age and optional weather enrichment |
+| `weather_now` | Fetch current weather for a location (latitude/longitude), with temporal context |
+| `weather_at_time` | Fetch nearest-hour weather for a requested instant and location |
 
 ## Supported Calendars
 
@@ -188,6 +190,17 @@ python3 scripts/calendar_bridge.py timeline \
   --date-basis local \
   --targets minguo,japanese_era,sexagenary,solar_term_24 \
   --locale zh-CN
+
+# Weather now for current location
+python3 scripts/calendar_bridge.py weather-now \
+  --location-json '{"location_name":"Taipei","latitude":25.033,"longitude":121.5654}' \
+  --timezone 'Asia/Taipei'
+
+# Weather at historical/future instant
+python3 scripts/calendar_bridge.py weather-at-time \
+  --input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
+  --location-json '{"location_name":"Taipei","latitude":25.033,"longitude":121.5654}' \
+  --timezone 'Asia/Taipei'
 
 # Astro snapshot (seven governors + four remainders)
 python3 scripts/calendar_bridge.py astro \
@@ -302,7 +315,7 @@ pip install -e ".[api]"
 ./scripts/run_api.sh
 ```
 
-Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context`
+Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context` · `POST /weather-now` · `POST /weather-at-time`
 
 ```bash
 # Smoke test

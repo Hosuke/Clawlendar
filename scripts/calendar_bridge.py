@@ -21,6 +21,8 @@ from clawlendar.bridge import (
     run_day_profile,
     run_life_context,
     run_timeline,
+    run_weather_at_time,
+    run_weather_now,
 )
 
 
@@ -201,6 +203,51 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Disable automatic weather enrichment even when latitude/longitude are provided",
     )
+
+    weather_now = sub.add_parser(
+        "weather-now",
+        help="Fetch weather at current time for a location (latitude/longitude required)",
+    )
+    weather_now.add_argument(
+        "--location-json",
+        required=True,
+        help="JSON object for location payload (must include latitude/longitude)",
+    )
+    weather_now.add_argument(
+        "--timezone",
+        default="UTC",
+        help="Fallback timezone when location payload does not include timezone",
+    )
+    weather_now.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag",
+    )
+
+    weather_at_time = sub.add_parser(
+        "weather-at-time",
+        help="Fetch weather nearest to a requested instant for a location",
+    )
+    weather_at_time.add_argument(
+        "--input-json",
+        required=True,
+        help="JSON object with timestamp/timestamp_ms/iso_datetime/local_datetime",
+    )
+    weather_at_time.add_argument(
+        "--location-json",
+        required=True,
+        help="JSON object for location payload (must include latitude/longitude)",
+    )
+    weather_at_time.add_argument(
+        "--timezone",
+        default="UTC",
+        help="Fallback timezone when location payload does not include timezone",
+    )
+    weather_at_time.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag",
+    )
     return parser.parse_args()
 
 
@@ -330,6 +377,42 @@ def main() -> int:
                 targets=targets,
                 locale=args.locale,
                 auto_weather=not bool(args.no_auto_weather),
+            )
+        elif args.command == "weather-now":
+            try:
+                location_payload = json.loads(args.location_json)
+                if not isinstance(location_payload, dict):
+                    raise CalendarError("--location-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --location-json: {exc}") from exc
+
+            output = run_weather_now(
+                warnings=warnings,
+                location_payload=location_payload,
+                timezone_name=args.timezone,
+                locale=args.locale,
+            )
+        elif args.command == "weather-at-time":
+            try:
+                input_payload = json.loads(args.input_json)
+                if not isinstance(input_payload, dict):
+                    raise CalendarError("--input-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --input-json: {exc}") from exc
+
+            try:
+                location_payload = json.loads(args.location_json)
+                if not isinstance(location_payload, dict):
+                    raise CalendarError("--location-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --location-json: {exc}") from exc
+
+            output = run_weather_at_time(
+                warnings=warnings,
+                input_payload=input_payload,
+                location_payload=location_payload,
+                timezone_name=args.timezone,
+                locale=args.locale,
             )
         else:
             raise CalendarError(f"Unsupported command: {args.command}")
