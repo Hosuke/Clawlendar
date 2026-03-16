@@ -128,7 +128,7 @@ This separation keeps integrations stable while still supporting rich user-facin
 
 ## MCP Tools
 
-Once connected, Claude has access to ten tools:
+Once connected, Claude has access to twelve tools:
 
 | Tool | Description |
 |------|-------------|
@@ -142,6 +142,21 @@ Once connected, Claude has access to ten tools:
 | `weather_now` | Fetch current weather for a location (latitude/longitude), with temporal context |
 | `weather_at_time` | Fetch nearest-hour weather for a requested instant and location |
 | `spacetime_snapshot` | One-call agent context: timeline + day profile + optional weather + scene prompt |
+| `historical_resolve` | Resolve historical input (`julian_day` / `proleptic_gregorian` / source calendar payload) into Gregorian bridge fields |
+| `historical_spacetime_snapshot` | Historical one-call context with provenance, confidence, and environment reconstruction tiers |
+
+## Historical Spacetime MVP
+
+Clawlendar now includes a historical bridge layer for ancient and pre-modern queries.
+
+- Supported input modes:
+  - `julian_day`
+  - `proleptic_gregorian`
+  - `source_calendar + source_payload` (for example `julian`)
+- Current bridge range: `CE 1..9999`
+- Historical date-only inputs default to assumed local noon unless clock time is provided.
+- Pre-modern environment output is returned as `climatology` or `historical_proxy`, not claimed as exact observed weather.
+- Every historical snapshot includes `uncertainty` and `provenance`.
 
 ## Supported Calendars
 
@@ -210,6 +225,23 @@ python3 scripts/calendar_bridge.py spacetime-snapshot \
   --location-json '{"location_name":"Taipei","latitude":25.033,"longitude":121.5654,"background":"neon city night"}' \
   --subject-json '{"entity_id":"lobster-001","role":"time traveler","soul":"continuity-first"}' \
   --locale en
+
+# Historical resolve
+python3 scripts/calendar_bridge.py historical-resolve \
+  --historical-input-json '{"source_calendar":"julian","source_payload":{"year":1400,"month":3,"day":10}}' \
+  --timezone 'Europe/Rome' \
+  --location-json '{"historical_name":"Florence","present_day_reference":"Firenze"}'
+
+# Historical spacetime snapshot
+python3 scripts/calendar_bridge.py historical-spacetime-snapshot \
+  --historical-input-json '{"source_calendar":"julian","source_payload":{"year":1400,"month":3,"day":10}}' \
+  --timezone 'Europe/Rome' \
+  --location-json '{"historical_name":"Florence","present_day_reference":"Firenze","historical_admin":{"polity":"Republic of Florence"},"latitude":43.7696,"longitude":11.2558}' \
+  --subject-json '{"role":"scribe"}' \
+  --targets gregorian,julian,sexagenary \
+  --locale en \
+  --no-astro \
+  --no-metaphysics
 
 # Astro snapshot (seven governors + four remainders)
 python3 scripts/calendar_bridge.py astro \
@@ -349,7 +381,7 @@ pip install -e ".[api]"
 ./scripts/run_api.sh
 ```
 
-Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context` · `POST /weather-now` · `POST /weather-at-time` · `POST /spacetime-snapshot`
+Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context` · `POST /weather-now` · `POST /weather-at-time` · `POST /spacetime-snapshot` · `POST /historical-resolve` · `POST /historical-spacetime-snapshot`
 
 ```bash
 # Smoke test

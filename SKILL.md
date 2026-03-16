@@ -28,6 +28,7 @@ Provide a single, agent-friendly bridge layer so different tools can ask calenda
 6. Always pass `locale` (`en`, `zh-CN`, `zh-TW`) when user-facing text is required.
 7. Use `life_context` when agents need birth->now continuity context with subject and location anchors.
 8. Use `spacetime_snapshot` when agents need a one-call context package for an instant (`timeline + day_profile + weather + scene_prompt`).
+9. Use `historical_resolve` or `historical_spacetime_snapshot` for pre-modern or ancient queries that need `julian_day`, source-calendar input, uncertainty markers, and provenance.
 
 ## Quick Start (MCP Server)
 
@@ -157,9 +158,9 @@ Use the JSON contract in `references/integration-contract.md` for tool-to-tool i
 
 ## Tool Mapping
 
-- MCP tools: `capabilities`, `convert`, `timeline`, `astro_snapshot`, `calendar_month`, `day_profile`, `life_context`, `weather_now`, `weather_at_time`, `spacetime_snapshot`
-- CLI commands: `capabilities`, `convert`, `timeline`, `astro`, `calendar-month`, `day-profile`, `life-context`, `weather-now`, `weather-at-time`, `spacetime-snapshot`
-- FastAPI endpoints: `GET /capabilities`, `POST /convert`, `POST /timeline`, `POST /astro`, `POST /calendar-month`, `POST /day-profile`, `POST /life-context`, `POST /weather-now`, `POST /weather-at-time`, `POST /spacetime-snapshot`
+- MCP tools: `capabilities`, `convert`, `timeline`, `astro_snapshot`, `calendar_month`, `day_profile`, `life_context`, `weather_now`, `weather_at_time`, `spacetime_snapshot`, `historical_resolve`, `historical_spacetime_snapshot`
+- CLI commands: `capabilities`, `convert`, `timeline`, `astro`, `calendar-month`, `day-profile`, `life-context`, `weather-now`, `weather-at-time`, `spacetime-snapshot`, `historical-resolve`, `historical-spacetime-snapshot`
+- FastAPI endpoints: `GET /capabilities`, `POST /convert`, `POST /timeline`, `POST /astro`, `POST /calendar-month`, `POST /day-profile`, `POST /life-context`, `POST /weather-now`, `POST /weather-at-time`, `POST /spacetime-snapshot`, `POST /historical-resolve`, `POST /historical-spacetime-snapshot`
 
 ## References
 

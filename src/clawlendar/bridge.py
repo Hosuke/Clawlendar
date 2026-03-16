@@ -37,6 +37,20 @@ class DateParts:
             raise CalendarError(f"Invalid Gregorian date: {self.as_dict()}") from exc
 
 
+@dataclass(frozen=True)
+class HistoricalAnchor:
+    instant_utc: dt.datetime
+    source_mode: str
+    source_calendar: Optional[str]
+    source_payload: Optional[Dict[str, Any]]
+    julian_day: float
+    bridge_date_gregorian: DateParts
+    local_time_model: str
+    precision: str
+    uncertainty_date: str
+    uncertainty_time: str
+
+
 class CalendarAdapter:
     name: str
     description: str
@@ -1217,6 +1231,8 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "weather_now": True,
             "weather_at_time": True,
             "spacetime_snapshot": True,
+            "historical_resolve": True,
+            "historical_spacetime_snapshot": True,
         },
         "life_context": {
             "supported": True,
@@ -1249,6 +1265,25 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
                 "location_for_weather": ["latitude", "longitude"],
             },
             "commands": ["spacetime_snapshot"],
+        },
+        "historical_spacetime": {
+            "supported": True,
+            "description": (
+                "Historical bridge for agents: resolve ancient/local calendar input into a "
+                "canonical Gregorian/JD anchor with explicit confidence and provenance."
+            ),
+            "bridge_range": "CE 1..9999",
+            "input_modes": ["julian_day", "proleptic_gregorian", "source_calendar + source_payload"],
+            "environment_modes": [
+                "archive_reanalysis_candidate",
+                "climatology",
+                "historical_proxy",
+            ],
+            "commands": ["historical_resolve", "historical_spacetime_snapshot"],
+            "notes": [
+                "Exact day-level weather is not promised before modern reanalysis eras.",
+                "Date-only historical input defaults to assumed local noon unless explicit clock time is provided.",
+            ],
         },
         "metaphysics": {
             "supported": True,
@@ -1407,6 +1442,188 @@ def build_instant_view(instant_utc: dt.datetime, timezone: dt.tzinfo) -> Dict[st
     }
 
 
+def ensure_supported_bridge_year(year: int) -> None:
+    if year < 1 or year > 9999:
+        raise CalendarError("historical bridge currently supports only CE years 1..9999")
+
+
+def datetime_to_julian_day(instant_utc: dt.datetime) -> float:
+    instant_utc = instant_utc.astimezone(dt.timezone.utc)
+    date_parts = DateParts(instant_utc.year, instant_utc.month, instant_utc.day)
+    seconds = (
+        instant_utc.hour * 3600
+        + instant_utc.minute * 60
+        + instant_utc.second
+        + instant_utc.microsecond / 1_000_000.0
+    )
+    return gregorian_to_jdn(date_parts) - 0.5 + (seconds / 86400.0)
+
+
+def julian_day_to_datetime_utc(julian_day: float) -> dt.datetime:
+    shifted = julian_day + 0.5
+    jdn = math.floor(shifted)
+    day_fraction = shifted - jdn
+    date_parts = jdn_to_gregorian(int(jdn))
+    ensure_supported_bridge_year(date_parts.year)
+    total_seconds = int(round(day_fraction * 86400))
+    base = dt.datetime(
+        date_parts.year,
+        date_parts.month,
+        date_parts.day,
+        tzinfo=dt.timezone.utc,
+    )
+    if total_seconds >= 86400:
+        base = base + dt.timedelta(days=1)
+        total_seconds -= 86400
+    return base + dt.timedelta(seconds=total_seconds)
+
+
+def parse_historical_clock_payload(payload: Dict[str, Any]) -> Tuple[int, int, int, str, str, str]:
+    if "time_of_day" in payload:
+        raw_time = str(payload["time_of_day"]).strip()
+        chunks = raw_time.split(":")
+        if len(chunks) not in {2, 3}:
+            raise CalendarError("time_of_day must follow HH:MM or HH:MM:SS")
+        try:
+            hour = int(chunks[0])
+            minute = int(chunks[1])
+            second = int(chunks[2]) if len(chunks) == 3 else 0
+            dt.time(hour, minute, second)
+        except ValueError as exc:
+            raise CalendarError("time_of_day must be a valid clock time") from exc
+        return hour, minute, second, "clock_time", "clock_time", "medium"
+
+    has_explicit_clock = any(key in payload for key in ("hour", "minute", "second"))
+    if has_explicit_clock:
+        hour = to_int(payload.get("hour", 0), "hour")
+        minute = to_int(payload.get("minute", 0), "minute")
+        second = to_int(payload.get("second", 0), "second")
+        try:
+            dt.time(hour, minute, second)
+        except ValueError as exc:
+            raise CalendarError("hour/minute/second must form a valid clock time") from exc
+        return hour, minute, second, "clock_time", "clock_time", "medium"
+
+    return 12, 0, 0, "date_only_assumed_noon", "local_solar_time_assumed_noon", "high"
+
+
+def build_historical_anchor_output(anchor: HistoricalAnchor, timezone: dt.tzinfo) -> Dict[str, Any]:
+    instant_local = anchor.instant_utc.astimezone(timezone)
+    return {
+        "input_mode": anchor.source_mode,
+        "source_calendar": anchor.source_calendar,
+        "source_payload": anchor.source_payload,
+        "bridge_datetime": build_instant_view(anchor.instant_utc, timezone),
+        "bridge_date_gregorian": anchor.bridge_date_gregorian.as_dict(),
+        "julian_day": round(anchor.julian_day, 6),
+        "local_time_model": anchor.local_time_model,
+        "precision": anchor.precision,
+        "uncertainty": {
+            "date": anchor.uncertainty_date,
+            "time_of_day": anchor.uncertainty_time,
+        },
+        "supported_bridge_range": "CE 1..9999",
+        "local_date": instant_local.date().isoformat(),
+    }
+
+
+def parse_historical_anchor(
+    registry: Dict[str, CalendarAdapter],
+    payload: Dict[str, Any],
+    timezone: dt.tzinfo,
+) -> HistoricalAnchor:
+    if "julian_day" in payload:
+        julian_day = to_float(payload["julian_day"], "julian_day")
+        if not math.isfinite(julian_day):
+            raise CalendarError("julian_day must be finite")
+        instant_utc = julian_day_to_datetime_utc(julian_day)
+        bridge_date = DateParts(instant_utc.year, instant_utc.month, instant_utc.day)
+        return HistoricalAnchor(
+            instant_utc=instant_utc,
+            source_mode="julian_day",
+            source_calendar=None,
+            source_payload={"julian_day": julian_day},
+            julian_day=julian_day,
+            bridge_date_gregorian=bridge_date,
+            local_time_model="julian_day_utc",
+            precision="exact_julian_day",
+            uncertainty_date="low",
+            uncertainty_time="low",
+        )
+
+    if "proleptic_gregorian" in payload:
+        source_payload = payload["proleptic_gregorian"]
+        if not isinstance(source_payload, dict):
+            raise CalendarError("proleptic_gregorian must be a JSON object")
+        date_parts = GregorianAdapter().to_gregorian(source_payload)
+        ensure_supported_bridge_year(date_parts.year)
+        hour, minute, second, precision, local_time_model, time_uncertainty = parse_historical_clock_payload(
+            source_payload
+        )
+        instant_local = dt.datetime(
+            date_parts.year,
+            date_parts.month,
+            date_parts.day,
+            hour,
+            minute,
+            second,
+            tzinfo=timezone,
+        )
+        instant_utc = instant_local.astimezone(dt.timezone.utc)
+        return HistoricalAnchor(
+            instant_utc=instant_utc,
+            source_mode="proleptic_gregorian",
+            source_calendar="gregorian",
+            source_payload=source_payload,
+            julian_day=datetime_to_julian_day(instant_utc),
+            bridge_date_gregorian=date_parts,
+            local_time_model=local_time_model,
+            precision=precision,
+            uncertainty_date="low",
+            uncertainty_time=time_uncertainty,
+        )
+
+    if "source_calendar" in payload:
+        source_calendar = str(payload["source_calendar"]).strip()
+        source_payload = payload.get("source_payload")
+        if not isinstance(source_payload, dict):
+            raise CalendarError("historical source_payload must be a JSON object")
+        adapter = registry.get(source_calendar)
+        if adapter is None:
+            raise CalendarError(f"Unknown source calendar '{source_calendar}'")
+        date_parts = adapter.to_gregorian(source_payload)
+        ensure_supported_bridge_year(date_parts.year)
+        hour, minute, second, precision, local_time_model, time_uncertainty = parse_historical_clock_payload(
+            source_payload
+        )
+        instant_local = dt.datetime(
+            date_parts.year,
+            date_parts.month,
+            date_parts.day,
+            hour,
+            minute,
+            second,
+            tzinfo=timezone,
+        )
+        instant_utc = instant_local.astimezone(dt.timezone.utc)
+        return HistoricalAnchor(
+            instant_utc=instant_utc,
+            source_mode="calendar_projection",
+            source_calendar=source_calendar,
+            source_payload=source_payload,
+            julian_day=datetime_to_julian_day(instant_utc),
+            bridge_date_gregorian=date_parts,
+            local_time_model=local_time_model,
+            precision=precision,
+            uncertainty_date="low",
+            uncertainty_time=time_uncertainty,
+        )
+
+    raise CalendarError(
+        "historical input must include one of: julian_day, proleptic_gregorian, source_calendar"
+    )
+
+
 def life_stage_from_age_days(age_days: float) -> str:
     if age_days < 1:
         return "seed"
@@ -1498,6 +1715,9 @@ def normalize_space_payload(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]
     lon_value = to_float(longitude, "longitude") if longitude is not None else None
     elevation = source.get("elevation_m")
     elevation_value = to_float(elevation, "elevation_m") if elevation is not None else None
+    historical_admin = source.get("historical_admin")
+    if not isinstance(historical_admin, dict):
+        historical_admin = {}
     return {
         "location_name": location_name or None,
         "timezone": str(source.get("timezone") or "").strip() or None,
@@ -1508,6 +1728,14 @@ def normalize_space_payload(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]
         "longitude": lon_value,
         "elevation_m": elevation_value,
         "environment_tags": normalized_tags,
+        "historical_name": str(source.get("historical_name") or "").strip() or None,
+        "present_day_reference": str(source.get("present_day_reference") or "").strip() or None,
+        "historical_admin": {str(key): value for key, value in historical_admin.items() if str(key).strip()},
+        "civilization": str(source.get("civilization") or "").strip() or None,
+        "era_label": str(source.get("era_label") or "").strip() or None,
+        "religious_context": str(source.get("religious_context") or "").strip() or None,
+        "cultural_context": str(source.get("cultural_context") or "").strip() or None,
+        "place_kind": str(source.get("place_kind") or "").strip() or None,
         "background": str(source.get("background") or "").strip() or None,
         "climate": str(source.get("climate") or "").strip() or None,
         "weather_note": str(source.get("weather_note") or source.get("weather") or "").strip() or None,
@@ -2549,6 +2777,402 @@ def run_spacetime_snapshot(
                 + list(day_profile.get("warnings", []))
                 + list(weather_warnings)
                 + (weather_context.get("warnings", []) if weather_context else [])
+            )
+        ),
+    }
+
+
+def climate_band_from_latitude(latitude: Optional[float]) -> str:
+    if latitude is None:
+        return "unknown"
+    absolute = abs(latitude)
+    if absolute < 13:
+        return "tropical"
+    if absolute < 23.5:
+        return "subtropical"
+    if absolute < 45:
+        return "temperate"
+    if absolute < 60:
+        return "cool_temperate"
+    if absolute < 66.5:
+        return "subpolar"
+    return "polar"
+
+
+def infer_landscape_class(space: Dict[str, Any]) -> str:
+    tags = {tag.lower() for tag in space.get("environment_tags", [])}
+    background = str(space.get("background") or "").lower()
+    scenery = str(space.get("scenery_note") or "").lower()
+    combined = " ".join([background, scenery])
+    if {"sea", "ocean", "coast", "coastal"} & tags or "coast" in combined or "sea" in combined:
+        return "coastal"
+    if {"river", "lake", "waterfront"} & tags or "river" in combined or "lake" in combined:
+        return "riparian"
+    if {"mountain", "alpine"} & tags or "mountain" in combined:
+        return "mountain"
+    if {"forest", "woodland"} & tags or "forest" in combined:
+        return "forest"
+    if {"desert", "arid"} & tags or "desert" in combined:
+        return "arid"
+    if {"farm", "field", "rural", "agrarian"} & tags or "field" in combined:
+        return "agrarian"
+    if {"city", "urban"} & tags or "city" in combined:
+        return "urban"
+    return "continental"
+
+
+def classify_environment_mode(anchor_year: int) -> Tuple[str, str]:
+    if anchor_year >= 1940:
+        return "archive_reanalysis_candidate", "medium"
+    if anchor_year >= 1850:
+        return "climatology", "medium"
+    return "historical_proxy", "low"
+
+
+def build_historical_place_anchor(space: Dict[str, Any]) -> Dict[str, Any]:
+    resolved_name = (
+        space.get("historical_name")
+        or space.get("location_name")
+        or space.get("city")
+        or space.get("present_day_reference")
+        or "unanchored-place"
+    )
+    present_day_reference = (
+        space.get("present_day_reference")
+        or space.get("city")
+        or space.get("location_name")
+        or None
+    )
+    latitude = space.get("latitude")
+    longitude = space.get("longitude")
+    if latitude is not None and longitude is not None:
+        confidence = "high"
+    elif space.get("location_name") or space.get("historical_name"):
+        confidence = "medium"
+    else:
+        confidence = "low"
+    return {
+        "query": space.get("historical_name") or space.get("location_name") or resolved_name,
+        "resolved_name": resolved_name,
+        "present_day_reference": present_day_reference,
+        "coordinates": {
+            "latitude": latitude,
+            "longitude": longitude,
+            "elevation_m": space.get("elevation_m"),
+        },
+        "historical_admin": {
+            "era_label": space.get("era_label"),
+            "civilization": space.get("civilization"),
+            "country": space.get("country"),
+            "region": space.get("region"),
+            "details": space.get("historical_admin") or {},
+        },
+        "place_kind": space.get("place_kind"),
+        "confidence": confidence,
+    }
+
+
+def build_historical_environment_context(
+    anchor_local: dt.datetime,
+    space: Dict[str, Any],
+) -> Dict[str, Any]:
+    latitude = space.get("latitude")
+    mode, confidence = classify_environment_mode(anchor_local.year)
+    climate = space.get("climate") or climate_band_from_latitude(latitude)
+    landscape_class = infer_landscape_class(space)
+    season = meteorological_season(anchor_local.month, latitude)
+    if space.get("weather_note"):
+        weather_reconstruction = space["weather_note"]
+        weather_confidence = "medium"
+    elif mode == "archive_reanalysis_candidate":
+        weather_reconstruction = (
+            "Modern archive-grade weather lookup may be available through weather_at_time "
+            "for this date range when coordinates are supplied."
+        )
+        weather_confidence = "medium"
+    elif mode == "climatology":
+        weather_reconstruction = (
+            f"Likely {season} climatology in a {climate} zone; exact day weather is not directly recoverable."
+        )
+        weather_confidence = "low"
+    else:
+        weather_reconstruction = (
+            f"{season} seasonal conditions reconstructed from region/climate context only; "
+            "treat day-level weather as speculative."
+        )
+        weather_confidence = "low"
+
+    return {
+        "environment_mode": mode,
+        "confidence": confidence,
+        "season_meteorological": season,
+        "hemisphere": hemisphere_from_latitude(latitude),
+        "climate": climate,
+        "landscape_class": landscape_class,
+        "weather_reconstruction": weather_reconstruction,
+        "weather_confidence": weather_confidence,
+        "scenery_note": space.get("scenery_note"),
+        "background": space.get("background"),
+    }
+
+
+def build_provenance_record(
+    field: str,
+    source_type: str,
+    confidence: str,
+    method: str,
+    notes: Optional[str] = None,
+) -> Dict[str, Any]:
+    record = {
+        "field": field,
+        "source_type": source_type,
+        "confidence": confidence,
+        "method": method,
+    }
+    if notes:
+        record["notes"] = notes
+    return record
+
+
+def build_historical_context(anchor_local: dt.datetime, space: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "era_label": space.get("era_label"),
+        "civilization": space.get("civilization"),
+        "religious_context": space.get("religious_context"),
+        "cultural_context": space.get("cultural_context"),
+        "notes": [
+            "Historical context may combine user-supplied place metadata with calendar bridge inference.",
+            f"Anchor season: {meteorological_season(anchor_local.month, space.get('latitude'))}.",
+        ],
+    }
+
+
+def sanitize_historical_projection_results(
+    anchor_year: int,
+    projection_results: Optional[Dict[str, Any]],
+) -> Tuple[Dict[str, Any], List[str]]:
+    if not isinstance(projection_results, dict):
+        return {}, []
+
+    sanitized: Dict[str, Any] = {}
+    warnings: List[str] = []
+    for name, value in projection_results.items():
+        if name == "chinese_lunar":
+            payload = value.get("payload") if isinstance(value, dict) else None
+            if (
+                anchor_year < 1900
+                or not isinstance(payload, dict)
+                or int(payload.get("lunar_year", 0) or 0) <= 0
+                or int(payload.get("lunar_month", 0) or 0) <= 0
+                or int(payload.get("lunar_day", 0) or 0) <= 0
+            ):
+                warnings.append(
+                    "Suppressed chinese_lunar projection in historical snapshot because provider range is not reliable for this anchor."
+                )
+                continue
+        if name == "japanese_era" and anchor_year < 1868:
+            warnings.append(
+                "Suppressed japanese_era projection in historical snapshot because the anchor predates the supported era table."
+            )
+            continue
+        if name == "minguo" and anchor_year < 1912:
+            warnings.append(
+                "Suppressed minguo projection in historical snapshot because the anchor predates ROC year 1."
+            )
+            continue
+        sanitized[name] = value
+    return sanitized, warnings
+
+
+def run_historical_resolve(
+    registry: Dict[str, CalendarAdapter],
+    warnings: List[str],
+    historical_input_payload: Dict[str, Any],
+    timezone_name: str = "UTC",
+    location_payload: Optional[Dict[str, Any]] = None,
+    locale: Optional[str] = None,
+) -> Dict[str, Any]:
+    timezone = get_timezone(timezone_name)
+    locale_tag = normalize_locale_tag(locale)
+    anchor = parse_historical_anchor(registry, historical_input_payload, timezone)
+    normalized_space = normalize_space_payload(location_payload)
+    place_anchor = build_historical_place_anchor(normalized_space)
+
+    derived_warnings = list(warnings)
+    if anchor.precision == "date_only_assumed_noon":
+        derived_warnings.append(
+            "Historical input did not include clock time; local noon was assumed for bridge calculations."
+        )
+    if anchor.instant_utc.year < 1850:
+        derived_warnings.append(
+            "Pre-1850 environment reconstruction should be treated as climatology/proxy, not exact weather."
+        )
+
+    return {
+        "command": "historical_resolve",
+        "time_model": "historical_bridge",
+        "timezone": timezone_name,
+        "locale": locale_tag,
+        "historical_input_payload": historical_input_payload,
+        "time_anchor": build_historical_anchor_output(anchor, timezone),
+        "place_anchor": place_anchor,
+        "warnings": sorted(set(derived_warnings)),
+    }
+
+
+def run_historical_spacetime_snapshot(
+    registry: Dict[str, CalendarAdapter],
+    warnings: List[str],
+    historical_input_payload: Dict[str, Any],
+    timezone_name: str = "UTC",
+    location_payload: Optional[Dict[str, Any]] = None,
+    subject_payload: Optional[Dict[str, Any]] = None,
+    targets: Optional[List[str]] = None,
+    locale: Optional[str] = None,
+    include_astro: bool = True,
+    include_metaphysics: bool = True,
+) -> Dict[str, Any]:
+    timezone = get_timezone(timezone_name)
+    locale_tag = normalize_locale_tag(locale)
+    anchor = parse_historical_anchor(registry, historical_input_payload, timezone)
+    normalized_space = normalize_space_payload(location_payload)
+    normalized_subject = normalize_subject_payload(subject_payload)
+    instant_payload = {"iso_datetime": anchor.instant_utc.isoformat()}
+    timeline_result = run_timeline(
+        registry=registry,
+        warnings=warnings,
+        input_payload=instant_payload,
+        timezone_name=timezone_name,
+        date_basis="local",
+        targets=targets,
+        locale=locale_tag,
+    )
+    projection_suppression_warnings: List[str] = []
+    sanitized_timeline_results, extra_projection_warnings = sanitize_historical_projection_results(
+        anchor.bridge_date_gregorian.year,
+        timeline_result.get("calendar_projection", {}).get("results"),
+    )
+    timeline_result["calendar_projection"]["results"] = sanitized_timeline_results
+    projection_suppression_warnings.extend(extra_projection_warnings)
+
+    day_profile_result: Optional[Dict[str, Any]] = None
+    profile_warnings: List[str] = []
+    try:
+        day_profile_result = run_day_profile(
+            registry=registry,
+            warnings=warnings,
+            input_payload=instant_payload,
+            timezone_name=timezone_name,
+            date_basis="local",
+            include_astro=include_astro,
+            include_metaphysics=include_metaphysics,
+            locale=locale_tag,
+        )
+        if day_profile_result and isinstance(day_profile_result.get("calendar_details"), dict):
+            sanitized_details, extra_profile_warnings = sanitize_historical_projection_results(
+                anchor.bridge_date_gregorian.year,
+                day_profile_result["calendar_details"],
+            )
+            day_profile_result["calendar_details"] = sanitized_details
+            profile_warnings.extend(extra_profile_warnings)
+    except Exception as exc:
+        profile_warnings.append(f"historical day profile degraded: {exc}")
+
+    anchor_local = anchor.instant_utc.astimezone(timezone)
+    place_anchor = build_historical_place_anchor(normalized_space)
+    environment_context = build_historical_environment_context(anchor_local, normalized_space)
+    historical_context = build_historical_context(anchor_local, normalized_space)
+
+    provenance = [
+        build_provenance_record(
+            field="time_anchor",
+            source_type=anchor.source_mode,
+            confidence="high" if anchor.source_mode == "julian_day" else "medium",
+            method="historical input normalized into Gregorian bridge date and Julian Day.",
+        ),
+        build_provenance_record(
+            field="place_anchor",
+            source_type="user_supplied_location",
+            confidence=place_anchor["confidence"],
+            method="location payload normalized into historical/place anchor fields.",
+        ),
+        build_provenance_record(
+            field="environment_context",
+            source_type=environment_context["environment_mode"],
+            confidence=environment_context["confidence"],
+            method=(
+                "season + latitude + user-supplied climate/background metadata; "
+                "no exact pre-modern day-weather claim is made."
+            ),
+        ),
+    ]
+
+    location_name = place_anchor["resolved_name"]
+    role = normalized_subject.get("role") or "agent"
+    scene_prompt = (
+        f"Anchor {location_name} at local time {anchor_local.isoformat()} for {role}. "
+        f"Use {environment_context['environment_mode']} environment context and preserve "
+        f"historical uncertainty markers."
+    )
+    if environment_context.get("weather_reconstruction"):
+        scene_prompt = f"{scene_prompt} Environment: {environment_context['weather_reconstruction']}"
+    if normalized_space.get("background"):
+        scene_prompt = f"{scene_prompt} Background: {normalized_space['background']}."
+    if normalized_space.get("scenery_note"):
+        scene_prompt = f"{scene_prompt} Scenery: {normalized_space['scenery_note']}."
+
+    derived_warnings = list(warnings)
+    if anchor.precision == "date_only_assumed_noon":
+        derived_warnings.append(
+            "Historical input did not include clock time; local noon was assumed for bridge calculations."
+        )
+    if environment_context["environment_mode"] != "archive_reanalysis_candidate":
+        derived_warnings.append(
+            "Environment block is reconstructed context, not observed weather."
+        )
+
+    return {
+        "command": "historical_spacetime_snapshot",
+        "time_model": "historical_bridge",
+        "timezone": timezone_name,
+        "locale": locale_tag,
+        "historical_input_payload": historical_input_payload,
+        "time_anchor": build_historical_anchor_output(anchor, timezone),
+        "bridge_date_gregorian": anchor.bridge_date_gregorian.as_dict(),
+        "place_anchor": place_anchor,
+        "subject": normalized_subject,
+        "timeline": {
+            "calendar_projection": timeline_result["calendar_projection"],
+            "warnings": timeline_result["warnings"],
+        },
+        "day_profile": {
+            "calendar_details": day_profile_result.get("calendar_details") if day_profile_result else None,
+            "astro": day_profile_result.get("astro") if day_profile_result and include_astro else None,
+            "metaphysics": (
+                day_profile_result.get("metaphysics")
+                if day_profile_result and include_metaphysics
+                else None
+            ),
+            "warnings": day_profile_result.get("warnings", []) if day_profile_result else profile_warnings,
+        },
+        "environment_context": environment_context,
+        "historical_context": historical_context,
+        "provenance": provenance,
+        "world_context": {
+            "scene_prompt": scene_prompt,
+            "agent_guidance": [
+                "Use `time_anchor.bridge_datetime` as the canonical bridge instant.",
+                "Respect `uncertainty` and `provenance` when narrating or reasoning about historical scenes.",
+                "Treat environment reconstruction as approximate unless an observed weather source is explicitly attached.",
+            ],
+        },
+        "warnings": sorted(
+            set(
+                derived_warnings
+                + list(timeline_result.get("warnings", []))
+                + list(projection_suppression_warnings)
+                + list(profile_warnings)
+                + (list(day_profile_result.get("warnings", [])) if day_profile_result else [])
             )
         ),
     }

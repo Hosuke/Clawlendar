@@ -14,6 +14,8 @@ from clawlendar.bridge import (
     CalendarError,
     make_registry,
     normalize_targets,
+    run_historical_resolve,
+    run_historical_spacetime_snapshot,
     run_calendar_month,
     run_astro_snapshot,
     run_capabilities,
@@ -305,6 +307,76 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Disable weather in snapshot output",
     )
+
+    historical_resolve = sub.add_parser(
+        "historical-resolve",
+        help="Resolve historical calendar input into Gregorian/JD bridge fields",
+    )
+    historical_resolve.add_argument(
+        "--historical-input-json",
+        required=True,
+        help="JSON object with julian_day, proleptic_gregorian, or source_calendar/source_payload",
+    )
+    historical_resolve.add_argument(
+        "--timezone",
+        default="UTC",
+        help="IANA timezone for local historical interpretation",
+    )
+    historical_resolve.add_argument(
+        "--location-json",
+        required=False,
+        help="Optional JSON object for historical place metadata",
+    )
+    historical_resolve.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag",
+    )
+
+    historical_spacetime = sub.add_parser(
+        "historical-spacetime-snapshot",
+        help="Historical one-call context with provenance and environment reconstruction",
+    )
+    historical_spacetime.add_argument(
+        "--historical-input-json",
+        required=True,
+        help="JSON object with julian_day, proleptic_gregorian, or source_calendar/source_payload",
+    )
+    historical_spacetime.add_argument(
+        "--timezone",
+        default="UTC",
+        help="IANA timezone for local historical interpretation",
+    )
+    historical_spacetime.add_argument(
+        "--location-json",
+        required=False,
+        help="Optional JSON object for place anchor",
+    )
+    historical_spacetime.add_argument(
+        "--subject-json",
+        required=False,
+        help="Optional JSON object for subject anchor",
+    )
+    historical_spacetime.add_argument(
+        "--targets",
+        required=False,
+        help="Optional comma-separated calendar targets",
+    )
+    historical_spacetime.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag",
+    )
+    historical_spacetime.add_argument(
+        "--no-astro",
+        action="store_true",
+        help="Disable astro in historical snapshot output",
+    )
+    historical_spacetime.add_argument(
+        "--no-metaphysics",
+        action="store_true",
+        help="Disable metaphysics in historical snapshot output",
+    )
     return parser.parse_args()
 
 
@@ -511,6 +583,70 @@ def main() -> int:
                 include_astro=not bool(args.no_astro),
                 include_metaphysics=not bool(args.no_metaphysics),
                 include_weather=not bool(args.no_weather),
+            )
+        elif args.command == "historical-resolve":
+            try:
+                historical_input_payload = json.loads(args.historical_input_json)
+                if not isinstance(historical_input_payload, dict):
+                    raise CalendarError("--historical-input-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --historical-input-json: {exc}") from exc
+
+            location_payload = None
+            if args.location_json:
+                try:
+                    location_payload = json.loads(args.location_json)
+                    if not isinstance(location_payload, dict):
+                        raise CalendarError("--location-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --location-json: {exc}") from exc
+
+            output = run_historical_resolve(
+                registry=registry,
+                warnings=warnings,
+                historical_input_payload=historical_input_payload,
+                timezone_name=args.timezone,
+                location_payload=location_payload,
+                locale=args.locale,
+            )
+        elif args.command == "historical-spacetime-snapshot":
+            try:
+                historical_input_payload = json.loads(args.historical_input_json)
+                if not isinstance(historical_input_payload, dict):
+                    raise CalendarError("--historical-input-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --historical-input-json: {exc}") from exc
+
+            location_payload = None
+            if args.location_json:
+                try:
+                    location_payload = json.loads(args.location_json)
+                    if not isinstance(location_payload, dict):
+                        raise CalendarError("--location-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --location-json: {exc}") from exc
+
+            subject_payload = None
+            if args.subject_json:
+                try:
+                    subject_payload = json.loads(args.subject_json)
+                    if not isinstance(subject_payload, dict):
+                        raise CalendarError("--subject-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --subject-json: {exc}") from exc
+
+            targets = normalize_targets(args.targets) if args.targets else None
+            output = run_historical_spacetime_snapshot(
+                registry=registry,
+                warnings=warnings,
+                historical_input_payload=historical_input_payload,
+                timezone_name=args.timezone,
+                location_payload=location_payload,
+                subject_payload=subject_payload,
+                targets=targets,
+                locale=args.locale,
+                include_astro=not bool(args.no_astro),
+                include_metaphysics=not bool(args.no_metaphysics),
             )
         else:
             raise CalendarError(f"Unsupported command: {args.command}")

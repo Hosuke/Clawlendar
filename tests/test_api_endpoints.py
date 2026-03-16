@@ -32,6 +32,8 @@ def test_capabilities_endpoint_includes_life_context() -> None:
     assert data["commands"]["weather_now"] is True
     assert data["commands"]["weather_at_time"] is True
     assert data["commands"]["spacetime_snapshot"] is True
+    assert data["commands"]["historical_resolve"] is True
+    assert data["commands"]["historical_spacetime_snapshot"] is True
 
 
 def test_convert_endpoint_basic() -> None:
@@ -204,3 +206,64 @@ def test_spacetime_snapshot_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
     data = resp.json()
     assert data["command"] == "spacetime_snapshot"
     assert data["weather_context"]["weather"]["weather_label"] == "partly_cloudy"
+
+
+def test_historical_resolve_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_run_historical_resolve(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return {
+            "command": "historical_resolve",
+            "time_anchor": {"input_mode": "julian_day"},
+            "place_anchor": {"resolved_name": "Rome"},
+            "warnings": [],
+        }
+
+    monkeypatch.setattr(api_module.bridge, "run_historical_resolve", fake_run_historical_resolve)
+    resp = client.post(
+        "/historical-resolve",
+        json={
+            "historical_input_payload": {"julian_day": 2461115.5},
+            "timezone": "UTC",
+            "location_payload": {"historical_name": "Rome"},
+            "locale": "en",
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["command"] == "historical_resolve"
+    assert data["place_anchor"]["resolved_name"] == "Rome"
+
+
+def test_historical_spacetime_snapshot_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_run_historical_snapshot(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return {
+            "command": "historical_spacetime_snapshot",
+            "environment_context": {"environment_mode": "historical_proxy"},
+            "provenance": [{"field": "time_anchor"}],
+            "warnings": [],
+        }
+
+    monkeypatch.setattr(
+        api_module.bridge,
+        "run_historical_spacetime_snapshot",
+        fake_run_historical_snapshot,
+    )
+    resp = client.post(
+        "/historical-spacetime-snapshot",
+        json={
+            "historical_input_payload": {
+                "source_calendar": "julian",
+                "source_payload": {"year": 1400, "month": 3, "day": 10},
+            },
+            "timezone": "Europe/Rome",
+            "location_payload": {"historical_name": "Florence"},
+            "subject_payload": {"role": "scribe"},
+            "targets": ["gregorian", "julian"],
+            "locale": "en",
+            "include_astro": False,
+            "include_metaphysics": False,
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["command"] == "historical_spacetime_snapshot"
+    assert data["environment_context"]["environment_mode"] == "historical_proxy"

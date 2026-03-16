@@ -14,6 +14,8 @@ from mcp.types import ToolAnnotations
 
 from clawlendar.bridge import (
     CalendarError,
+    run_historical_resolve,
+    run_historical_spacetime_snapshot,
     make_registry,
     run_calendar_month,
     run_astro_snapshot,
@@ -300,6 +302,58 @@ def spacetime_snapshot(
             include_astro=include_astro,
             include_metaphysics=include_metaphysics,
             include_weather=include_weather,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool(title="Historical Resolve", annotations=READ_ONLY_TOOL)
+def historical_resolve(
+    historical_input_payload: Dict[str, Any],
+    timezone: str = "UTC",
+    location_payload: Optional[Dict[str, Any]] = None,
+    locale: str = "en",
+) -> str:
+    """Resolve historical/local calendar input into canonical Gregorian bridge fields."""
+    try:
+        result = run_historical_resolve(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            historical_input_payload=historical_input_payload,
+            timezone_name=timezone,
+            location_payload=location_payload,
+            locale=locale,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool(title="Historical Spacetime Snapshot", annotations=READ_ONLY_TOOL)
+def historical_spacetime_snapshot(
+    historical_input_payload: Dict[str, Any],
+    timezone: str = "UTC",
+    location_payload: Optional[Dict[str, Any]] = None,
+    subject_payload: Optional[Dict[str, Any]] = None,
+    targets: Optional[List[str]] = None,
+    locale: str = "en",
+    include_astro: bool = True,
+    include_metaphysics: bool = True,
+) -> str:
+    """Return historical spacetime context with explicit provenance and reconstruction tiers."""
+    try:
+        result = run_historical_spacetime_snapshot(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            historical_input_payload=historical_input_payload,
+            timezone_name=timezone,
+            location_payload=location_payload,
+            subject_payload=subject_payload,
+            targets=targets,
+            locale=locale,
+            include_astro=include_astro,
+            include_metaphysics=include_metaphysics,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:

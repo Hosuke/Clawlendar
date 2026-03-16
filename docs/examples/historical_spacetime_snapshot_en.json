@@ -1,0 +1,226 @@
+{
+  "command": "historical_spacetime_snapshot",
+  "time_model": "historical_bridge",
+  "timezone": "Europe/Rome",
+  "locale": "en",
+  "historical_input_payload": {
+    "source_calendar": "julian",
+    "source_payload": {
+      "year": 1400,
+      "month": 3,
+      "day": 10
+    }
+  },
+  "time_anchor": {
+    "input_mode": "calendar_projection",
+    "source_calendar": "julian",
+    "source_payload": {
+      "year": 1400,
+      "month": 3,
+      "day": 10
+    },
+    "bridge_datetime": {
+      "timestamp": -17980750196.0,
+      "timestamp_ms": -17980750196000,
+      "iso_utc": "1400-03-19T11:10:04+00:00",
+      "iso_local": "1400-03-19T12:00:00+00:49:56",
+      "utc_offset_seconds": 2996
+    },
+    "bridge_date_gregorian": {
+      "year": 1400,
+      "month": 3,
+      "day": 19
+    },
+    "julian_day": 2232476.965324,
+    "local_time_model": "local_solar_time_assumed_noon",
+    "precision": "date_only_assumed_noon",
+    "uncertainty": {
+      "date": "low",
+      "time_of_day": "high"
+    },
+    "supported_bridge_range": "CE 1..9999",
+    "local_date": "1400-03-19"
+  },
+  "bridge_date_gregorian": {
+    "year": 1400,
+    "month": 3,
+    "day": 19
+  },
+  "place_anchor": {
+    "query": "Florence",
+    "resolved_name": "Florence",
+    "present_day_reference": "Firenze",
+    "coordinates": {
+      "latitude": 43.7696,
+      "longitude": 11.2558,
+      "elevation_m": null
+    },
+    "historical_admin": {
+      "era_label": null,
+      "civilization": null,
+      "country": null,
+      "region": null,
+      "details": {
+        "polity": "Republic of Florence"
+      }
+    },
+    "place_kind": null,
+    "confidence": "high"
+  },
+  "subject": {
+    "entity_id": null,
+    "name": null,
+    "role": "scribe",
+    "soul": null,
+    "traits": [],
+    "memory_anchor": null
+  },
+  "timeline": {
+    "calendar_projection": {
+      "targets": [
+        "gregorian",
+        "julian",
+        "sexagenary",
+        "chinese_lunar"
+      ],
+      "results": {
+        "gregorian": {
+          "payload": {
+            "year": 1400,
+            "month": 3,
+            "day": 19
+          },
+          "approximate": false
+        },
+        "julian": {
+          "payload": {
+            "year": 1400,
+            "month": 3,
+            "day": 10
+          },
+          "approximate": false
+        },
+        "sexagenary": {
+          "payload": {
+            "stem": "geng",
+            "branch": "chen",
+            "cycle_index": 17,
+            "stem_label": "geng",
+            "branch_label": "chen",
+            "display": "geng-chen",
+            "locale": "en"
+          },
+          "approximate": true
+        }
+      },
+      "unavailable_targets": []
+    },
+    "warnings": []
+  },
+  "day_profile": {
+    "calendar_details": {
+      "iso_week": {
+        "payload": {
+          "iso_year": 1400,
+          "iso_week": 12,
+          "iso_weekday": 3
+        },
+        "approximate": false
+      },
+      "buddhist": {
+        "payload": {
+          "year": 1943,
+          "month": 3,
+          "day": 19
+        },
+        "approximate": false
+      },
+      "sexagenary": {
+        "payload": {
+          "stem": "geng",
+          "branch": "chen",
+          "cycle_index": 17,
+          "stem_label": "geng",
+          "branch_label": "chen",
+          "display": "geng-chen",
+          "locale": "en"
+        },
+        "approximate": true
+      },
+      "solar_term_24": {
+        "payload": {
+          "current_term": "awakening_of_insects",
+          "current_term_date": "1400-03-06",
+          "next_term": "spring_equinox",
+          "next_term_date": "1400-03-21",
+          "days_to_next": 2,
+          "current_term_label": "awakening_of_insects",
+          "next_term_label": "spring_equinox",
+          "display": "awakening_of_insects -> spring_equinox",
+          "locale": "en"
+        },
+        "approximate": true
+      }
+    },
+    "astro": null,
+    "metaphysics": null,
+    "warnings": []
+  },
+  "environment_context": {
+    "environment_mode": "historical_proxy",
+    "confidence": "low",
+    "season_meteorological": "spring",
+    "hemisphere": "northern",
+    "climate": "temperate",
+    "landscape_class": "urban",
+    "weather_reconstruction": "spring seasonal conditions reconstructed from region/climate context only; treat day-level weather as speculative.",
+    "weather_confidence": "low",
+    "scenery_note": null,
+    "background": "merchant republic city center"
+  },
+  "historical_context": {
+    "era_label": null,
+    "civilization": null,
+    "religious_context": null,
+    "cultural_context": null,
+    "notes": [
+      "Historical context may combine user-supplied place metadata with calendar bridge inference.",
+      "Anchor season: spring."
+    ]
+  },
+  "provenance": [
+    {
+      "field": "time_anchor",
+      "source_type": "calendar_projection",
+      "confidence": "medium",
+      "method": "historical input normalized into Gregorian bridge date and Julian Day."
+    },
+    {
+      "field": "place_anchor",
+      "source_type": "user_supplied_location",
+      "confidence": "high",
+      "method": "location payload normalized into historical/place anchor fields."
+    },
+    {
+      "field": "environment_context",
+      "source_type": "historical_proxy",
+      "confidence": "low",
+      "method": "season + latitude + user-supplied climate/background metadata; no exact pre-modern day-weather claim is made."
+    }
+  ],
+  "world_context": {
+    "scene_prompt": "Anchor Florence at local time 1400-03-19T12:00:00+00:49:56 for scribe. Use historical_proxy environment context and preserve historical uncertainty markers. Environment: spring seasonal conditions reconstructed from region/climate context only; treat day-level weather as speculative. Background: merchant republic city center.",
+    "agent_guidance": [
+      "Use `time_anchor.bridge_datetime` as the canonical bridge instant.",
+      "Respect `uncertainty` and `provenance` when narrating or reasoning about historical scenes.",
+      "Treat environment reconstruction as approximate unless an observed weather source is explicitly attached."
+    ]
+  },
+  "warnings": [
+    "Environment block is reconstructed context, not observed weather.",
+    "Historical input did not include clock time; local noon was assumed for bridge calculations.",
+    "Suppressed chinese_lunar projection in historical snapshot because provider range is not reliable for this anchor.",
+    "Suppressed japanese_era projection in historical snapshot because the anchor predates the supported era table.",
+    "Suppressed minguo projection in historical snapshot because the anchor predates ROC year 1."
+  ]
+}

@@ -158,7 +158,50 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
   - `weather_context.weather`
   - `world_context.scene_prompt`
 
+## historical_resolve
+
+- Purpose: normalize ancient/pre-modern date input into a canonical Gregorian + Julian Day bridge anchor.
+- Input:
+  - `historical_input_payload`
+    - `{"julian_day": ...}`
+    - `{"proleptic_gregorian": {"year": ..., "month": ..., "day": ..., "time_of_day": "HH:MM:SS"}}`
+    - `{"source_calendar": "...", "source_payload": {...}}`
+  - `timezone`
+  - `location_payload` (optional historical place metadata)
+  - `locale`
+- Output highlights:
+  - `time_anchor.bridge_datetime`
+  - `time_anchor.bridge_date_gregorian`
+  - `time_anchor.julian_day`
+  - `time_anchor.uncertainty`
+  - `place_anchor`
+
+## historical_spacetime_snapshot
+
+- Purpose: one-call historical context package for agents with explicit reconstruction tiers.
+- Input:
+  - `historical_input_payload`
+  - `timezone`
+  - `location_payload` (optional; supports `historical_name`, `present_day_reference`, `historical_admin`, `civilization`, `era_label`)
+  - `subject_payload` (optional)
+  - `targets` (optional projection calendars)
+  - `locale`
+  - `include_astro` (bool)
+  - `include_metaphysics` (bool)
+- Output highlights:
+  - `time_anchor`
+  - `place_anchor`
+  - `timeline.calendar_projection`
+  - `environment_context.environment_mode`
+  - `environment_context.weather_reconstruction`
+  - `historical_context`
+  - `provenance[]`
+  - `world_context.scene_prompt`
+
 ## Stability Notes
 
 - Stable machine keys are preferred; localized display fields are additive.
 - Approximate outputs are explicitly marked via `warnings` and adapter metadata.
+- Historical bridge currently supports `CE 1..9999`.
+- Historical date-only input defaults to assumed local noon unless clock time is explicitly provided.
+- Pre-modern environment context is not the same as exact observed weather.

@@ -16,6 +16,8 @@ from clawlendar.bridge import (  # noqa: E402
     run_capabilities,
     run_convert,
     run_day_profile,
+    run_historical_resolve,
+    run_historical_spacetime_snapshot,
     run_life_context,
     run_spacetime_snapshot,
     run_timeline,
@@ -33,6 +35,8 @@ def test_capabilities_exposes_life_context_and_i18n() -> None:
     assert result["commands"]["weather_now"] is True
     assert result["commands"]["weather_at_time"] is True
     assert result["commands"]["spacetime_snapshot"] is True
+    assert result["commands"]["historical_resolve"] is True
+    assert result["commands"]["historical_spacetime_snapshot"] is True
     assert "zh-CN" in result["i18n"]["supported_locales"]
 
 
@@ -381,3 +385,65 @@ def test_spacetime_snapshot_aggregates_day_weather_and_scene(monkeypatch: pytest
     assert result["timeline"]["calendar_projection"]["results"]
     assert result["day_profile"]["calendar_details"]["chinese_lunar"] is not None
     assert "scene_prompt" in result["world_context"]
+
+
+def test_historical_resolve_supports_julian_day() -> None:
+    registry, warnings = make_registry()
+    result = run_historical_resolve(
+        registry=registry,
+        warnings=warnings,
+        historical_input_payload={"julian_day": 2461115.5},
+        timezone_name="UTC",
+        location_payload={"historical_name": "Rome", "present_day_reference": "Rome"},
+        locale="en",
+    )
+
+    assert result["command"] == "historical_resolve"
+    assert result["time_anchor"]["input_mode"] == "julian_day"
+    assert result["time_anchor"]["bridge_date_gregorian"] == {"year": 2026, "month": 3, "day": 16}
+    assert result["place_anchor"]["resolved_name"] == "Rome"
+
+
+def test_historical_spacetime_snapshot_supports_source_calendar() -> None:
+    registry, warnings = make_registry()
+    result = run_historical_spacetime_snapshot(
+        registry=registry,
+        warnings=warnings,
+        historical_input_payload={
+            "source_calendar": "julian",
+            "source_payload": {"year": 1400, "month": 3, "day": 10},
+        },
+        timezone_name="Europe/Rome",
+        location_payload={
+            "historical_name": "Florence",
+            "present_day_reference": "Firenze",
+            "historical_admin": {"polity": "Republic of Florence"},
+            "latitude": 43.7696,
+            "longitude": 11.2558,
+            "background": "merchant republic city center",
+        },
+        subject_payload={"role": "scribe"},
+        targets=["gregorian", "julian", "sexagenary", "chinese_lunar"],
+        locale="en",
+        include_astro=False,
+        include_metaphysics=False,
+    )
+
+    assert result["command"] == "historical_spacetime_snapshot"
+    assert result["time_anchor"]["source_calendar"] == "julian"
+    assert result["environment_context"]["environment_mode"] == "historical_proxy"
+    assert result["place_anchor"]["historical_admin"]["details"]["polity"] == "Republic of Florence"
+    assert isinstance(result["provenance"], list) and len(result["provenance"]) >= 3
+    assert "calendar_projection" in result["timeline"]
+    assert "chinese_lunar" not in result["timeline"]["calendar_projection"]["results"]
+
+
+def test_historical_spacetime_snapshot_rejects_bce_range() -> None:
+    registry, warnings = make_registry()
+    with pytest.raises(CalendarError):
+        run_historical_spacetime_snapshot(
+            registry=registry,
+            warnings=warnings,
+            historical_input_payload={"proleptic_gregorian": {"year": 0, "month": 1, "day": 1}},
+            timezone_name="UTC",
+        )

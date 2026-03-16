@@ -162,6 +162,39 @@ class SpacetimeSnapshotRequest(BaseModel):
     )
 
 
+class HistoricalResolveRequest(BaseModel):
+    historical_input_payload: Dict[str, Any] = Field(
+        ...,
+        description="Historical input using julian_day, proleptic_gregorian, or source_calendar/source_payload",
+    )
+    timezone: str = Field(default="UTC", description="IANA timezone for local historical interpretation")
+    location_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional historical place metadata such as historical_name/present_day_reference/historical_admin",
+    )
+    locale: str = Field(default="en", description="Locale tag")
+
+
+class HistoricalSpacetimeSnapshotRequest(BaseModel):
+    historical_input_payload: Dict[str, Any] = Field(
+        ...,
+        description="Historical input using julian_day, proleptic_gregorian, or source_calendar/source_payload",
+    )
+    timezone: str = Field(default="UTC", description="IANA timezone for local historical interpretation")
+    location_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional place anchor and historical metadata",
+    )
+    subject_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional subject anchor",
+    )
+    targets: Optional[List[str]] = Field(default=None, description="Optional projection targets")
+    locale: str = Field(default="en", description="Locale tag")
+    include_astro: bool = Field(default=True, description="Include astro snapshot where available")
+    include_metaphysics: bool = Field(default=True, description="Include metaphysics where available")
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
@@ -318,6 +351,40 @@ def spacetime_snapshot(payload: SpacetimeSnapshotRequest) -> Dict[str, Any]:
             include_astro=payload.include_astro,
             include_metaphysics=payload.include_metaphysics,
             include_weather=payload.include_weather,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/historical-resolve")
+def historical_resolve(payload: HistoricalResolveRequest) -> Dict[str, Any]:
+    try:
+        return bridge.run_historical_resolve(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            historical_input_payload=payload.historical_input_payload,
+            timezone_name=payload.timezone,
+            location_payload=payload.location_payload,
+            locale=payload.locale,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/historical-spacetime-snapshot")
+def historical_spacetime_snapshot(payload: HistoricalSpacetimeSnapshotRequest) -> Dict[str, Any]:
+    try:
+        return bridge.run_historical_spacetime_snapshot(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            historical_input_payload=payload.historical_input_payload,
+            timezone_name=payload.timezone,
+            location_payload=payload.location_payload,
+            subject_payload=payload.subject_payload,
+            targets=payload.targets,
+            locale=payload.locale,
+            include_astro=payload.include_astro,
+            include_metaphysics=payload.include_metaphysics,
         )
     except bridge.CalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

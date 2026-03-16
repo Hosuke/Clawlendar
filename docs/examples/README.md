@@ -15,6 +15,7 @@ Live frontend demo:
 - `day_profile_zh_cn.json`
 - `day_profile_en.json`
 - `life_context_zh_cn.json`
+- `historical_spacetime_snapshot_en.json`
 
 ## Re-generate
 
@@ -29,4 +30,5 @@ python3 scripts/calendar_bridge.py astro --input-json '{"timestamp":1773014400}'
 python3 scripts/calendar_bridge.py day-profile --input-json '{"timestamp":1773014400}' --timezone 'Asia/Taipei' --locale zh-CN > docs/examples/day_profile_zh_cn.json
 python3 scripts/calendar_bridge.py day-profile --input-json '{"timestamp":1773014400}' --timezone 'America/New_York' --locale en > docs/examples/day_profile_en.json
 python3 scripts/calendar_bridge.py life-context --birth-input-json '{"iso_datetime":"2026-03-01T09:00:00+08:00"}' --now-input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' --timezone 'Asia/Taipei' --space-json '{"location_name":"南京·秦淮河","latitude":32.0366,"longitude":118.7895,"background":"春季夜游","climate":"humid subtropical","scenery_note":"夜色与河道灯影"}' --subject-json '{"entity_id":"lobster-001","role":"18岁女儿","soul":"温柔且主动问候"}' --locale zh-CN > docs/examples/life_context_zh_cn.json
+python3 scripts/calendar_bridge.py historical-spacetime-snapshot --historical-input-json '{"source_calendar":"julian","source_payload":{"year":1400,"month":3,"day":10}}' --timezone 'Europe/Rome' --location-json '{"historical_name":"Florence","present_day_reference":"Firenze","historical_admin":{"polity":"Republic of Florence"},"latitude":43.7696,"longitude":11.2558,"background":"merchant republic city center"}' --subject-json '{"role":"scribe"}' --targets gregorian,julian,sexagenary,chinese_lunar --locale en --no-astro --no-metaphysics > docs/examples/historical_spacetime_snapshot_en.json
 ```
