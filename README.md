@@ -239,9 +239,20 @@ Returned fields (excerpt):
     "age": {"readable": "8d 9h 30m", "stage": "juvenile"},
     "birthday": {"month": 3, "day": 1, "days_until_next_birthday": 357}
   },
+  "temporal_context": {
+    "local_date": "2026-03-09",
+    "weekday_name_en": "Monday",
+    "season_meteorological": "spring"
+  },
   "environment": {
     "place": {"location_name": "南京·秦淮河"},
-    "weather": {"provider": "open_meteo", "weather_label": "<dynamic>"}
+    "weather": {
+      "provider": "open_meteo",
+      "data_mode": "archive_reanalysis|forecast_projection",
+      "requested_time_local": "2026-03-09T18:30:00+08:00",
+      "time_delta_minutes": "<nearest-hour offset>",
+      "weather_label": "<dynamic>"
+    }
   },
   "world_context": {
     "scene_prompt": "..."
@@ -351,6 +362,7 @@ references/
 - `sexagenary` and `solar_term_24` keep stable machine keys and add localized display fields via `locale` (`zh-CN`, `zh-TW`, etc.).
 - Some calendars are available only when optional dependencies are installed.
 - `life_context` weather enrichment is best effort (network/provider dependent) and should be treated as contextual reference, not a certified meteorological record.
+- Weather is now time-anchored to `now_input_payload` (nearest-hour Open-Meteo point). Past instants use archive data; future/current instants use forecast/current data.
 
 ## Privacy Policy
 
@@ -411,5 +423,5 @@ pip install clawlendar
 - 干支（近似）、二十四节气（近似）
 - 干支/节气支持本地化显示（可传 `locale=zh-CN` 或 `locale=zh-TW`，同时保留机器可读 key）
 - `day_profile` 支持输出：八字、老黄历（宜忌/彭祖/冲煞）、西方日课（月相/行星状态/星座）
-- `life_context` 支持输出：生命起始时间、当前时间、已存活时长、生日与下次生日倒计时、地点锚点、个体角色/性格锚点、可选天气增强
+- `life_context` 支持输出：生命起始时间、当前时间、已存活时长、生日与下次生日倒计时、地点锚点、个体角色/性格锚点、可选天气增强（按 `now_input_payload` 时刻锚定，返回最近小时匹配偏差）
 - 可选：农历（`lunardate`）、伊斯兰历、希伯来历、波斯历（`convertdate`）

@@ -560,6 +560,31 @@ WEATHER_CODE_LABELS = {
     99: "thunderstorm_hail_heavy",
 }
 
+ASTRO_BODY_SYMBOLS = {
+    "sun": "☉",
+    "moon": "☽",
+    "mercury": "☿",
+    "venus": "♀",
+    "mars": "♂",
+    "jupiter": "♃",
+    "saturn": "♄",
+}
+
+FOUR_REMAINDER_SYMBOLS = {
+    "ascending_node": "☊",
+    "descending_node": "☋",
+    "lunar_apogee_mean": "⚸",
+    "earth_perihelion": "⊕",
+}
+
+ASPECT_SYMBOLS = {
+    "conjunction": "☌",
+    "sextile": "⚹",
+    "square": "□",
+    "trine": "△",
+    "opposition": "☍",
+}
+
 
 def is_chinese_locale(locale_tag: str) -> bool:
     return locale_tag in {"zh-Hans", "zh-Hant"}
@@ -1199,8 +1224,9 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
                 "space_anchor": True,
                 "subject_anchor": True,
                 "auto_weather_enrichment": True,
+                "weather_time_anchor": True,
             },
-            "weather_provider": "open_meteo (best effort)",
+            "weather_provider": "open_meteo forecast + archive (best effort)",
         },
         "metaphysics": {
             "supported": True,
@@ -1236,12 +1262,15 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "supported": True,
             "zodiac_systems": ["tropical"],
             "seven_governors": SEVEN_GOVERNORS,
+            "body_symbols": ASTRO_BODY_SYMBOLS,
             "four_remainders": [
                 "ascending_node",
                 "descending_node",
                 "lunar_apogee_mean",
                 "earth_perihelion",
             ],
+            "remainder_symbols": FOUR_REMAINDER_SYMBOLS,
+            "aspect_symbols": ASPECT_SYMBOLS,
             "approximate": True,
         },
         "i18n": {
@@ -1388,6 +1417,52 @@ def format_age_readable(total_seconds: int) -> str:
     return " ".join(chunks)
 
 
+def hemisphere_from_latitude(latitude: Optional[float]) -> str:
+    if latitude is None:
+        return "unknown"
+    if latitude > 0:
+        return "northern"
+    if latitude < 0:
+        return "southern"
+    return "equatorial"
+
+
+def meteorological_season(month: int, latitude: Optional[float]) -> str:
+    hemisphere = hemisphere_from_latitude(latitude)
+    north = {
+        12: "winter",
+        1: "winter",
+        2: "winter",
+        3: "spring",
+        4: "spring",
+        5: "spring",
+        6: "summer",
+        7: "summer",
+        8: "summer",
+        9: "autumn",
+        10: "autumn",
+        11: "autumn",
+    }
+    if hemisphere == "southern":
+        south_map = {"winter": "summer", "summer": "winter", "spring": "autumn", "autumn": "spring"}
+        return south_map.get(north.get(month, "unknown"), "unknown")
+    return north.get(month, "unknown")
+
+
+def build_temporal_context(now_local: dt.datetime, latitude: Optional[float]) -> Dict[str, Any]:
+    weekday_index = now_local.weekday()
+    return {
+        "local_date": now_local.date().isoformat(),
+        "local_time": now_local.time().isoformat(timespec="seconds"),
+        "weekday_index_mon0": weekday_index,
+        "weekday_name_en": now_local.strftime("%A"),
+        "is_weekend": weekday_index >= 5,
+        "day_of_year": int(now_local.strftime("%j")),
+        "hemisphere": hemisphere_from_latitude(latitude),
+        "season_meteorological": meteorological_season(now_local.month, latitude),
+    }
+
+
 def normalize_space_payload(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     source = payload if isinstance(payload, dict) else {}
     location_name = str(source.get("location_name") or source.get("location") or "").strip()
@@ -1491,7 +1566,10 @@ def fetch_open_meteo_weather(
     weather_code = int(weather_code_raw) if weather_code_raw is not None else None
     return {
         "provider": "open_meteo",
+        "data_mode": "current_snapshot",
         "time": current.get("time"),
+        "requested_time_local": None,
+        "time_delta_minutes": None,
         "temperature_c": current.get("temperature_2m"),
         "apparent_temperature_c": current.get("apparent_temperature"),
         "relative_humidity_pct": current.get("relative_humidity_2m"),
@@ -1503,10 +1581,133 @@ def fetch_open_meteo_weather(
     }
 
 
+def to_optional_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def to_optional_int(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def select_nearest_hour_index(hourly_times: List[str], anchor_local: dt.datetime) -> Tuple[int, int]:
+    anchor_naive = anchor_local.replace(tzinfo=None)
+    best_index: Optional[int] = None
+    best_delta: Optional[int] = None
+    for idx, raw_value in enumerate(hourly_times):
+        if not isinstance(raw_value, str):
+            continue
+        try:
+            parsed = dt.datetime.fromisoformat(raw_value)
+        except ValueError:
+            continue
+        delta_minutes = int(abs((parsed - anchor_naive).total_seconds()) // 60)
+        if best_delta is None or delta_minutes < best_delta:
+            best_delta = delta_minutes
+            best_index = idx
+    if best_index is None or best_delta is None:
+        raise CalendarError("weather provider did not return parseable hourly timestamps")
+    return best_index, best_delta
+
+
+def fetch_open_meteo_weather_for_instant(
+    latitude: float,
+    longitude: float,
+    timezone_name: str,
+    anchor_local: dt.datetime,
+) -> Dict[str, Any]:
+    today_local = dt.datetime.now(tz=ZoneInfo(timezone_name)).date()
+    target_date = anchor_local.date()
+    is_past = target_date < today_local
+    endpoint = "https://archive-api.open-meteo.com/v1/archive" if is_past else "https://api.open-meteo.com/v1/forecast"
+    data_mode = "archive_reanalysis" if is_past else "forecast_projection"
+
+    hourly_fields = ",".join(
+        [
+            "temperature_2m",
+            "relative_humidity_2m",
+            "apparent_temperature",
+            "precipitation",
+            "weather_code",
+            "wind_speed_10m",
+        ]
+    )
+    params = {
+        "latitude": str(latitude),
+        "longitude": str(longitude),
+        "start_date": target_date.isoformat(),
+        "end_date": target_date.isoformat(),
+        "hourly": hourly_fields,
+        "timezone": timezone_name,
+    }
+    query = urllib.parse.urlencode(params)
+    request = urllib.request.Request(f"{endpoint}?{query}", headers={"User-Agent": "clawlendar"})
+    with urllib.request.urlopen(request, timeout=6) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+
+    if payload.get("error"):
+        reason = payload.get("reason") or "weather provider error"
+        raise CalendarError(f"weather provider error: {reason}")
+
+    hourly = payload.get("hourly")
+    if not isinstance(hourly, dict):
+        if not is_past:
+            # Forecast endpoint can still provide current snapshot if hourly date is unavailable.
+            current = fetch_open_meteo_weather(latitude=latitude, longitude=longitude, timezone_name=timezone_name)
+            current["data_mode"] = "current_snapshot_fallback"
+            current["requested_time_local"] = anchor_local.isoformat()
+            return current
+        raise CalendarError("weather provider returned unexpected hourly payload")
+
+    hourly_times = hourly.get("time")
+    if not isinstance(hourly_times, list) or len(hourly_times) == 0:
+        if not is_past:
+            current = fetch_open_meteo_weather(latitude=latitude, longitude=longitude, timezone_name=timezone_name)
+            current["data_mode"] = "current_snapshot_fallback"
+            current["requested_time_local"] = anchor_local.isoformat()
+            return current
+        raise CalendarError("weather provider returned empty hourly time series")
+
+    index, delta_minutes = select_nearest_hour_index(hourly_times, anchor_local)
+
+    def value_at(field: str) -> Any:
+        values = hourly.get(field)
+        if not isinstance(values, list) or index >= len(values):
+            return None
+        return values[index]
+
+    weather_code = to_optional_int(value_at("weather_code"))
+    return {
+        "provider": "open_meteo",
+        "data_mode": data_mode,
+        "time": value_at("time") or hourly_times[index],
+        "requested_time_local": anchor_local.isoformat(),
+        "time_delta_minutes": delta_minutes,
+        "temperature_c": to_optional_float(value_at("temperature_2m")),
+        "apparent_temperature_c": to_optional_float(value_at("apparent_temperature")),
+        "relative_humidity_pct": to_optional_float(value_at("relative_humidity_2m")),
+        "precipitation_mm": to_optional_float(value_at("precipitation")),
+        "wind_speed_kmh": to_optional_float(value_at("wind_speed_10m")),
+        "weather_code": weather_code,
+        "weather_label": WEATHER_CODE_LABELS.get(weather_code, "unknown") if weather_code is not None else None,
+        "timezone": timezone_name,
+    }
+
+
 def build_environment_context(
     normalized_space: Dict[str, Any],
     timezone_name: str,
     auto_weather: bool,
+    anchor_local: Optional[dt.datetime] = None,
 ) -> Tuple[Dict[str, Any], List[str]]:
     context = {
         "place": {
@@ -1530,11 +1731,15 @@ def build_environment_context(
     longitude = normalized_space.get("longitude")
     if auto_weather and latitude is not None and longitude is not None:
         weather_timezone = normalized_space.get("timezone") or timezone_name
+        weather_anchor = anchor_local
+        if weather_anchor is None:
+            weather_anchor = dt.datetime.now(tz=ZoneInfo(weather_timezone))
         try:
-            context["weather"] = fetch_open_meteo_weather(
+            context["weather"] = fetch_open_meteo_weather_for_instant(
                 latitude=latitude,
                 longitude=longitude,
                 timezone_name=weather_timezone,
+                anchor_local=weather_anchor,
             )
         except (CalendarError, urllib.error.URLError, TimeoutError, ValueError) as exc:
             context_warnings.append(f"Weather enrichment unavailable: {exc}")
@@ -1696,7 +1901,10 @@ def major_aspects(points: Dict[str, float]) -> List[Dict[str, Any]]:
                 {
                     "left": left,
                     "right": right,
+                    "left_symbol": ASTRO_BODY_SYMBOLS.get(left),
+                    "right_symbol": ASTRO_BODY_SYMBOLS.get(right),
                     "aspect": best_match[0],
+                    "aspect_symbol": ASPECT_SYMBOLS.get(best_match[0]),
                     "exact_angle_deg": best_match[1],
                     "separation_deg": round(separation, 6),
                     "orb_deg": round(best_match[2], 6),
@@ -1738,11 +1946,13 @@ def run_astro_snapshot(
         "sun": {
             "longitude_deg": round(sun_longitude, 6),
             "zodiac_sign": zodiac_sign_from_longitude(sun_longitude),
+            "symbol": ASTRO_BODY_SYMBOLS.get("sun"),
             "distance_au": round(earth_position["r"], 6),
         },
         "moon": {
             "longitude_deg": round(moon_position["longitude"], 6),
             "zodiac_sign": zodiac_sign_from_longitude(moon_position["longitude"]),
+            "symbol": ASTRO_BODY_SYMBOLS.get("moon"),
             "distance_earth_radii": round(moon_position["r"], 6),
         },
     }
@@ -1757,6 +1967,7 @@ def run_astro_snapshot(
         results[planet] = {
             "longitude_deg": round(geo_longitude, 6),
             "zodiac_sign": zodiac_sign_from_longitude(geo_longitude),
+            "symbol": ASTRO_BODY_SYMBOLS.get(planet),
             "distance_au": round(geo_r, 6),
         }
 
@@ -1774,6 +1985,7 @@ def run_astro_snapshot(
     seven_governors = [
         {
             "name": body,
+            "symbol": ASTRO_BODY_SYMBOLS.get(body),
             "longitude_deg": results[body]["longitude_deg"],
             "zodiac_sign": results[body]["zodiac_sign"],
         }
@@ -1792,21 +2004,25 @@ def run_astro_snapshot(
     four_remainders = [
         {
             "name": "ascending_node",
+            "symbol": FOUR_REMAINDER_SYMBOLS.get("ascending_node"),
             "longitude_deg": round(asc_node, 6),
             "zodiac_sign": zodiac_sign_from_longitude(asc_node),
         },
         {
             "name": "descending_node",
+            "symbol": FOUR_REMAINDER_SYMBOLS.get("descending_node"),
             "longitude_deg": round(desc_node, 6),
             "zodiac_sign": zodiac_sign_from_longitude(desc_node),
         },
         {
             "name": "lunar_apogee_mean",
+            "symbol": FOUR_REMAINDER_SYMBOLS.get("lunar_apogee_mean"),
             "longitude_deg": round(lunar_apogee, 6),
             "zodiac_sign": zodiac_sign_from_longitude(lunar_apogee),
         },
         {
             "name": "earth_perihelion",
+            "symbol": FOUR_REMAINDER_SYMBOLS.get("earth_perihelion"),
             "longitude_deg": round(earth_perihelion, 6),
             "zodiac_sign": zodiac_sign_from_longitude(earth_perihelion),
         },
@@ -1992,6 +2208,11 @@ def run_life_context(
         normalized_space=normalized_space,
         timezone_name=timezone_name,
         auto_weather=auto_weather,
+        anchor_local=now_local,
+    )
+    temporal_context = build_temporal_context(
+        now_local=now_local,
+        latitude=normalized_space.get("latitude"),
     )
     life_id = normalized_subject["entity_id"] or f"LIFE-{int(birth_utc.timestamp())}"
 
@@ -2013,7 +2234,7 @@ def run_life_context(
         weather_label = weather.get("weather_label")
         temp = weather.get("temperature_c")
         if weather_label is not None and temp is not None:
-            scene_prompt = f"{scene_prompt} Weather now: {weather_label}, {temp}C."
+            scene_prompt = f"{scene_prompt} Weather near timeline anchor: {weather_label}, {temp}C."
     elif environment_context.get("weather_note"):
         scene_prompt = f"{scene_prompt} Weather note: {environment_context['weather_note']}"
     if environment_context.get("scenery_note"):
@@ -2045,6 +2266,7 @@ def run_life_context(
             },
         },
         "space": normalized_space,
+        "temporal_context": temporal_context,
         "environment": environment_context,
         "subject": normalized_subject,
         "calendar_context": {

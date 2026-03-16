@@ -1,11 +1,13 @@
 from pathlib import Path
 import sys
+from typing import Any, Dict
 
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+import clawlendar.bridge as bridge_module  # noqa: E402
 from clawlendar.bridge import (  # noqa: E402
     CalendarError,
     make_registry,
@@ -104,6 +106,23 @@ def test_astro_snapshot_shape() -> None:
     assert isinstance(result["major_aspects"], list)
 
 
+def test_astro_snapshot_includes_symbols() -> None:
+    _, warnings = make_registry()
+    result = run_astro_snapshot(
+        warnings=warnings,
+        input_payload={"timestamp": 1773014400},
+        timezone_name="Asia/Taipei",
+    )
+
+    sun = next(item for item in result["seven_governors"] if item["name"] == "sun")
+    assert sun["symbol"] == "☉"
+    ascending_node = next(item for item in result["four_remainders"] if item["name"] == "ascending_node")
+    assert ascending_node["symbol"] == "☊"
+    if result["major_aspects"]:
+        aspect = result["major_aspects"][0]
+        assert "aspect_symbol" in aspect
+
+
 def test_optional_calendars_convert_when_available() -> None:
     registry, warnings = make_registry()
     optional_targets = [name for name in ("chinese_lunar", "islamic", "hebrew", "persian") if name in registry]
@@ -193,6 +212,60 @@ def test_life_context_can_disable_auto_weather() -> None:
     assert environment["weather"] is None
     assert environment["weather_note"] == "多云"
     assert environment["scenery_note"] == "城市夜景"
+
+
+def test_life_context_weather_uses_now_anchor_and_temporal_context(monkeypatch: pytest.MonkeyPatch) -> None:
+    registry, warnings = make_registry()
+    captured: Dict[str, Any] = {}
+
+    def fake_weather_for_instant(
+        latitude: float,
+        longitude: float,
+        timezone_name: str,
+        anchor_local,
+    ) -> Dict[str, Any]:
+        captured["latitude"] = latitude
+        captured["longitude"] = longitude
+        captured["timezone_name"] = timezone_name
+        captured["anchor_local"] = anchor_local
+        return {
+            "provider": "open_meteo",
+            "data_mode": "archive_reanalysis",
+            "time": "2026-03-09T18:00",
+            "requested_time_local": anchor_local.isoformat(),
+            "time_delta_minutes": 30,
+            "temperature_c": 20.5,
+            "apparent_temperature_c": 20.0,
+            "relative_humidity_pct": 70,
+            "precipitation_mm": 0.0,
+            "wind_speed_kmh": 5.0,
+            "weather_code": 1,
+            "weather_label": "mainly_clear",
+            "timezone": timezone_name,
+        }
+
+    monkeypatch.setattr(bridge_module, "fetch_open_meteo_weather_for_instant", fake_weather_for_instant)
+    result = run_life_context(
+        registry=registry,
+        warnings=warnings,
+        birth_input_payload={"iso_datetime": "2026-03-01T09:00:00+08:00"},
+        now_input_payload={"iso_datetime": "2026-03-09T18:30:00+08:00"},
+        timezone_name="Asia/Taipei",
+        space_payload={
+            "location_name": "台北",
+            "latitude": 25.033,
+            "longitude": 121.5654,
+        },
+        auto_weather=True,
+    )
+
+    assert captured["latitude"] == 25.033
+    assert captured["longitude"] == 121.5654
+    assert captured["timezone_name"] == "Asia/Taipei"
+    assert captured["anchor_local"].isoformat().startswith("2026-03-09T18:30:00")
+    assert result["environment"]["weather"]["requested_time_local"].startswith("2026-03-09T18:30:00")
+    assert result["temporal_context"]["local_date"] == "2026-03-09"
+    assert result["temporal_context"]["season_meteorological"] in {"spring", "summer", "autumn", "winter"}
 
 
 def test_calendar_month_mode_still_works_for_minguo() -> None:

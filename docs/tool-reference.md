@@ -50,8 +50,11 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
   - `bodies` (optional)
 - Output highlights:
   - `seven_governors[]`
+  - `seven_governors[].symbol` (e.g. ☉☽☿♀♂♃♄)
   - `four_remainders[]`
+  - `four_remainders[].symbol` (e.g. ☊☋⚸)
   - `major_aspects[]`
+  - `major_aspects[].aspect_symbol` (e.g. ☌⚹□△☍)
 
 ## calendar_month
 
@@ -98,7 +101,9 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
 - Output highlights:
   - `life.age` (`seconds`, `days`, `readable`, `stage`)
   - `life.birthday` (`month`, `day`, `years_elapsed`, `days_until_next_birthday`)
+  - `temporal_context` (local date/time, weekday, weekend flag, hemisphere season)
   - `environment.place` + `environment.weather`
+  - `environment.weather.requested_time_local` + `time_delta_minutes` (nearest-hour match to timeline anchor)
   - `calendar_context.birth` and `calendar_context.now`
   - `world_context.scene_prompt`
   - `world_context.continuity_rules`
