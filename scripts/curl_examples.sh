@@ -3,15 +3,15 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://127.0.0.1:8000}"
 
-echo "[1/10] GET /health"
+echo "[1/11] GET /health"
 curl -sS "${BASE_URL}/health" | python3 -m json.tool
 echo
 
-echo "[2/10] GET /capabilities"
+echo "[2/11] GET /capabilities"
 curl -sS "${BASE_URL}/capabilities" | python3 -m json.tool
 echo
 
-echo "[3/10] POST /convert"
+echo "[3/11] POST /convert"
 curl -sS -X POST "${BASE_URL}/convert" \
   -H "Content-Type: application/json" \
   -d '{
@@ -22,7 +22,7 @@ curl -sS -X POST "${BASE_URL}/convert" \
   }' | python3 -m json.tool
 echo
 
-echo "[4/10] POST /timeline"
+echo "[4/11] POST /timeline"
 curl -sS -X POST "${BASE_URL}/timeline" \
   -H "Content-Type: application/json" \
   -d '{
@@ -34,7 +34,7 @@ curl -sS -X POST "${BASE_URL}/timeline" \
   }' | python3 -m json.tool
 echo
 
-echo "[5/10] POST /astro"
+echo "[5/11] POST /astro"
 curl -sS -X POST "${BASE_URL}/astro" \
   -H "Content-Type: application/json" \
   -d '{
@@ -44,7 +44,7 @@ curl -sS -X POST "${BASE_URL}/astro" \
   }' | python3 -m json.tool
 echo
 
-echo "[6/10] POST /day-profile"
+echo "[6/11] POST /day-profile"
 curl -sS -X POST "${BASE_URL}/day-profile" \
   -H "Content-Type: application/json" \
   -d '{
@@ -57,7 +57,7 @@ curl -sS -X POST "${BASE_URL}/day-profile" \
   }' | python3 -m json.tool
 echo
 
-echo "[7/10] POST /calendar-month (minguo example)"
+echo "[7/11] POST /calendar-month (minguo example)"
 curl -sS -X POST "${BASE_URL}/calendar-month" \
   -H "Content-Type: application/json" \
   -d '{
@@ -66,7 +66,7 @@ curl -sS -X POST "${BASE_URL}/calendar-month" \
   }' | python3 -m json.tool
 echo
 
-echo "[8/10] POST /life-context"
+echo "[8/11] POST /life-context"
 curl -sS -X POST "${BASE_URL}/life-context" \
   -H "Content-Type: application/json" \
   -d '{
@@ -91,7 +91,7 @@ curl -sS -X POST "${BASE_URL}/life-context" \
   }' | python3 -m json.tool
 echo
 
-echo "[9/10] POST /weather-now"
+echo "[9/11] POST /weather-now"
 curl -sS -X POST "${BASE_URL}/weather-now" \
   -H "Content-Type: application/json" \
   -d '{
@@ -105,7 +105,7 @@ curl -sS -X POST "${BASE_URL}/weather-now" \
   }' | python3 -m json.tool
 echo
 
-echo "[10/10] POST /weather-at-time"
+echo "[10/11] POST /weather-at-time"
 curl -sS -X POST "${BASE_URL}/weather-at-time" \
   -H "Content-Type: application/json" \
   -d '{
@@ -117,4 +117,29 @@ curl -sS -X POST "${BASE_URL}/weather-at-time" \
     },
     "timezone": "Asia/Taipei",
     "locale": "en"
+  }' | python3 -m json.tool
+echo
+
+echo "[11/11] POST /spacetime-snapshot"
+curl -sS -X POST "${BASE_URL}/spacetime-snapshot" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_payload": {"iso_datetime": "2026-03-09T18:30:00+08:00"},
+    "timezone": "Asia/Taipei",
+    "date_basis": "local",
+    "location_payload": {
+      "location_name": "Taipei",
+      "latitude": 25.033,
+      "longitude": 121.5654,
+      "background": "neon city night"
+    },
+    "subject_payload": {
+      "entity_id": "lobster-001",
+      "role": "time traveler",
+      "soul": "continuity-first"
+    },
+    "locale": "en",
+    "include_astro": true,
+    "include_metaphysics": true,
+    "include_weather": true
   }' | python3 -m json.tool

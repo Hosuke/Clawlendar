@@ -46,7 +46,7 @@ python3 -m pip install -r requirements.txt
 ## Agent Access Pattern (Vercel + JSON API)
 
 - Use Vercel frontend for human entry and discovery.
-- Use JSON API (`/life-context`, `/day-profile`, etc.) for agent-to-agent integration.
+- Use JSON API (`/spacetime-snapshot`, `/life-context`, `/day-profile`, etc.) for agent-to-agent integration.
 - Recommended: add `/api/*` proxy routes in `clawlendar-web` that forward to your Clawlendar backend.
 - Guide: [`docs/vercel-agent-gateway.md`](docs/vercel-agent-gateway.md)
 
@@ -128,7 +128,7 @@ This separation keeps integrations stable while still supporting rich user-facin
 
 ## MCP Tools
 
-Once connected, Claude has access to nine tools:
+Once connected, Claude has access to ten tools:
 
 | Tool | Description |
 |------|-------------|
@@ -141,6 +141,7 @@ Once connected, Claude has access to nine tools:
 | `life_context` | Build continuity-safe world context from birth time + now + space + subject anchors, with birthday/age and optional weather enrichment |
 | `weather_now` | Fetch current weather for a location (latitude/longitude), with temporal context |
 | `weather_at_time` | Fetch nearest-hour weather for a requested instant and location |
+| `spacetime_snapshot` | One-call agent context: timeline + day profile + optional weather + scene prompt |
 
 ## Supported Calendars
 
@@ -201,6 +202,14 @@ python3 scripts/calendar_bridge.py weather-at-time \
   --input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
   --location-json '{"location_name":"Taipei","latitude":25.033,"longitude":121.5654}' \
   --timezone 'Asia/Taipei'
+
+# One-call spacetime snapshot for agent context
+python3 scripts/calendar_bridge.py spacetime-snapshot \
+  --input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
+  --timezone 'Asia/Taipei' \
+  --location-json '{"location_name":"Taipei","latitude":25.033,"longitude":121.5654,"background":"neon city night"}' \
+  --subject-json '{"entity_id":"lobster-001","role":"time traveler","soul":"continuity-first"}' \
+  --locale en
 
 # Astro snapshot (seven governors + four remainders)
 python3 scripts/calendar_bridge.py astro \
@@ -308,6 +317,31 @@ Returned fields (excerpt):
 
 This confirms `day_profile` can directly return almanac-style good/bad actions (`yi`/`ji`) plus clash/sha details.
 
+## Sample Response (Spacetime Snapshot)
+
+Run:
+
+```bash
+python3 scripts/calendar_bridge.py spacetime-snapshot \
+  --input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
+  --timezone 'Asia/Taipei' \
+  --location-json '{"location_name":"Taipei","latitude":25.033,"longitude":121.5654}' \
+  --subject-json '{"entity_id":"lobster-001","role":"time traveler"}'
+```
+
+Returned fields (excerpt):
+
+```json
+{
+  "command": "spacetime_snapshot",
+  "instant": {"iso_local": "2026-03-09T18:30:00+08:00"},
+  "timeline": {"calendar_projection": {"results": {"chinese_lunar": {"payload": {}}}}},
+  "day_profile": {"metaphysics": {"western": {"moon_phase": {"label": "waxing_gibbous"}}}},
+  "weather_context": {"weather": {"weather_label": "partly_cloudy", "temperature_c": 21.2}},
+  "world_context": {"scene_prompt": "..."}
+}
+```
+
 ## HTTP API (FastAPI)
 
 ```bash
@@ -315,7 +349,7 @@ pip install -e ".[api]"
 ./scripts/run_api.sh
 ```
 
-Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context` · `POST /weather-now` · `POST /weather-at-time`
+Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context` · `POST /weather-now` · `POST /weather-at-time` · `POST /spacetime-snapshot`
 
 ```bash
 # Smoke test

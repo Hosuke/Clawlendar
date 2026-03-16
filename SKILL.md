@@ -1,7 +1,7 @@
 ---
 name: clawlendar
-version: 0.4.0
-description: Timestamp-first perpetual calendar interop for AI agents. Use when agents need cross-calendar conversion (Gregorian/Julian/ISO/ROC/Buddhist/Japanese era/sexagenary/solar terms plus optional lunar-Islamic-Hebrew-Persian), timeline normalization from timestamps, true month boundaries, day-level Bazi-Huangli-Western almanac payloads, and life-context modeling (birth-now age/birthday/place/weather/identity anchors).
+version: 0.4.1
+description: Timestamp-first perpetual calendar interop for AI agents. Use when agents need cross-calendar conversion (Gregorian/Julian/ISO/ROC/Buddhist/Japanese era/sexagenary/solar terms plus optional lunar-Islamic-Hebrew-Persian), timeline normalization from timestamps, true month boundaries, day-level Bazi-Huangli-Western almanac payloads, life-context modeling, and one-call spacetime snapshots (timeline + day profile + weather + scene prompt).
 author: Huang Geyang
 metadata:
   openclaw:
@@ -27,6 +27,7 @@ Provide a single, agent-friendly bridge layer so different tools can ask calenda
 5. Use `day_profile` for one-call details (`sexagenary`, `solar_term_24`, `chinese_lunar`, optional `astro`, optional metaphysics).
 6. Always pass `locale` (`en`, `zh-CN`, `zh-TW`) when user-facing text is required.
 7. Use `life_context` when agents need birth->now continuity context with subject and location anchors.
+8. Use `spacetime_snapshot` when agents need a one-call context package for an instant (`timeline + day_profile + weather + scene_prompt`).
 
 ## Quick Start (MCP Server)
 
@@ -124,6 +125,16 @@ python3 scripts/calendar_bridge.py life-context \
   --locale 'zh-CN'
 ```
 
+Build one-call spacetime snapshot for agent prompts:
+
+```bash
+python3 scripts/calendar_bridge.py spacetime-snapshot \
+  --input-json '{"iso_datetime":"2026-03-09T18:30:00+08:00"}' \
+  --timezone 'Asia/Taipei' \
+  --location-json '{"location_name":"Taipei","latitude":25.033,"longitude":121.5654}' \
+  --subject-json '{"entity_id":"lobster-001","role":"time traveler"}'
+```
+
 ## HTTP API
 
 Run HTTP API for multi-claw integration:
@@ -146,9 +157,9 @@ Use the JSON contract in `references/integration-contract.md` for tool-to-tool i
 
 ## Tool Mapping
 
-- MCP tools: `capabilities`, `convert`, `timeline`, `astro_snapshot`, `calendar_month`, `day_profile`, `life_context`
-- CLI commands: `capabilities`, `convert`, `timeline`, `astro`, `calendar-month`, `day-profile`, `life-context`
-- FastAPI endpoints: `GET /capabilities`, `POST /convert`, `POST /timeline`, `POST /astro`, `POST /calendar-month`, `POST /day-profile`, `POST /life-context`
+- MCP tools: `capabilities`, `convert`, `timeline`, `astro_snapshot`, `calendar_month`, `day_profile`, `life_context`, `weather_now`, `weather_at_time`, `spacetime_snapshot`
+- CLI commands: `capabilities`, `convert`, `timeline`, `astro`, `calendar-month`, `day-profile`, `life-context`, `weather-now`, `weather-at-time`, `spacetime-snapshot`
+- FastAPI endpoints: `GET /capabilities`, `POST /convert`, `POST /timeline`, `POST /astro`, `POST /calendar-month`, `POST /day-profile`, `POST /life-context`, `POST /weather-now`, `POST /weather-at-time`, `POST /spacetime-snapshot`
 
 ## References
 

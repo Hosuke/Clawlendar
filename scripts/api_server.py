@@ -137,6 +137,31 @@ class WeatherAtTimeRequest(BaseModel):
     locale: str = Field(default="en", description="Locale tag")
 
 
+class SpacetimeSnapshotRequest(BaseModel):
+    input_payload: Dict[str, Any] = Field(
+        ...,
+        description="One of timestamp/timestamp_ms/iso_datetime/local_datetime",
+    )
+    timezone: str = Field(default="UTC", description="IANA timezone")
+    date_basis: str = Field(default="local", description="'local' or 'utc'")
+    location_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional space anchor (location_name/latitude/longitude/background/etc.)",
+    )
+    subject_payload: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional subject anchor (entity_id/role/soul/etc.)",
+    )
+    targets: Optional[List[str]] = Field(default=None, description="Optional timeline projection targets")
+    locale: str = Field(default="en", description="Locale tag")
+    include_astro: bool = Field(default=True, description="Include astro snapshot")
+    include_metaphysics: bool = Field(default=True, description="Include metaphysics profile")
+    include_weather: bool = Field(
+        default=True,
+        description="Include weather context when coordinates are provided",
+    )
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok"}
@@ -270,6 +295,29 @@ def weather_at_time(payload: WeatherAtTimeRequest) -> Dict[str, Any]:
             location_payload=payload.location_payload,
             timezone_name=payload.timezone,
             locale=payload.locale,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/spacetime-snapshot")
+def spacetime_snapshot(payload: SpacetimeSnapshotRequest) -> Dict[str, Any]:
+    if payload.date_basis not in {"local", "utc"}:
+        raise HTTPException(status_code=400, detail="date_basis must be 'local' or 'utc'")
+    try:
+        return bridge.run_spacetime_snapshot(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            input_payload=payload.input_payload,
+            timezone_name=payload.timezone,
+            date_basis=payload.date_basis,
+            location_payload=payload.location_payload,
+            subject_payload=payload.subject_payload,
+            targets=payload.targets,
+            locale=payload.locale,
+            include_astro=payload.include_astro,
+            include_metaphysics=payload.include_metaphysics,
+            include_weather=payload.include_weather,
         )
     except bridge.CalendarError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

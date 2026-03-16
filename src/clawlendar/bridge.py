@@ -1216,6 +1216,7 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "life_context": True,
             "weather_now": True,
             "weather_at_time": True,
+            "spacetime_snapshot": True,
         },
         "life_context": {
             "supported": True,
@@ -1236,6 +1237,18 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
             "requires_location": ["latitude", "longitude"],
             "time_anchor": "nearest hourly point to requested instant",
             "commands": ["weather_now", "weather_at_time"],
+        },
+        "spacetime_snapshot": {
+            "supported": True,
+            "description": (
+                "One-call context for agents: timeline + day profile + "
+                "astro/metaphysics + time-anchored weather + scene prompt."
+            ),
+            "requires": {
+                "input_payload": True,
+                "location_for_weather": ["latitude", "longitude"],
+            },
+            "commands": ["spacetime_snapshot"],
         },
         "metaphysics": {
             "supported": True,
@@ -2393,6 +2406,149 @@ def run_life_context(
                 + birth_timeline["warnings"]
                 + now_timeline["warnings"]
                 + environment_warnings
+            )
+        ),
+    }
+
+
+def run_spacetime_snapshot(
+    registry: Dict[str, CalendarAdapter],
+    warnings: List[str],
+    input_payload: Dict[str, Any],
+    timezone_name: str = "UTC",
+    date_basis: str = "local",
+    location_payload: Optional[Dict[str, Any]] = None,
+    subject_payload: Optional[Dict[str, Any]] = None,
+    targets: Optional[List[str]] = None,
+    locale: Optional[str] = None,
+    include_astro: bool = True,
+    include_metaphysics: bool = True,
+    include_weather: bool = True,
+) -> Dict[str, Any]:
+    if date_basis not in {"local", "utc"}:
+        raise CalendarError("date_basis must be 'local' or 'utc'")
+
+    locale_tag = normalize_locale_tag(locale)
+    timeline_result = run_timeline(
+        registry=registry,
+        warnings=warnings,
+        input_payload=input_payload,
+        timezone_name=timezone_name,
+        date_basis=date_basis,
+        targets=targets,
+        locale=locale_tag,
+    )
+    day_profile = run_day_profile(
+        registry=registry,
+        warnings=warnings,
+        input_payload=input_payload,
+        timezone_name=timezone_name,
+        date_basis=date_basis,
+        include_astro=include_astro,
+        include_metaphysics=include_metaphysics,
+        locale=locale_tag,
+    )
+
+    timezone = get_timezone(timezone_name)
+    instant_utc = parse_instant_payload(input_payload, timezone)
+    instant_local = instant_utc.astimezone(timezone)
+    normalized_space = normalize_space_payload(location_payload)
+    normalized_subject = normalize_subject_payload(subject_payload)
+
+    weather_context: Optional[Dict[str, Any]] = None
+    weather_warnings: List[str] = []
+    if include_weather:
+        latitude = normalized_space.get("latitude")
+        longitude = normalized_space.get("longitude")
+        if latitude is not None and longitude is not None:
+            try:
+                weather_context = run_weather_at_time(
+                    warnings=[],
+                    input_payload=input_payload,
+                    location_payload=normalized_space,
+                    timezone_name=timezone_name,
+                    locale=locale_tag,
+                )
+            except CalendarError as exc:
+                weather_warnings.append(f"spacetime weather unavailable: {exc}")
+        else:
+            weather_warnings.append(
+                "spacetime weather skipped: provide latitude + longitude in location_payload."
+            )
+
+    temporal_context = build_temporal_context(
+        now_local=instant_local,
+        latitude=normalized_space.get("latitude"),
+    )
+    location_name = normalized_space.get("location_name") or "unanchored-space"
+    role = normalized_subject.get("role") or "agent"
+    scene_prompt = (
+        f"At local time {timeline_result['instant']['iso_local']} in {location_name}, "
+        f"continue context for {role} with timestamp continuity."
+    )
+
+    if day_profile.get("metaphysics"):
+        western = day_profile["metaphysics"].get("western", {})
+        moon_phase = western.get("moon_phase", {}).get("label")
+        sun_sign = western.get("sun_sign")
+        moon_sign = western.get("moon_sign")
+        if moon_phase:
+            scene_prompt = f"{scene_prompt} Moon phase: {moon_phase}."
+        if sun_sign and moon_sign:
+            scene_prompt = f"{scene_prompt} Sun/Moon: {sun_sign}/{moon_sign}."
+
+    if weather_context and weather_context.get("weather"):
+        weather = weather_context["weather"]
+        weather_label = weather.get("weather_label")
+        temperature_c = weather.get("temperature_c")
+        if weather_label is not None and temperature_c is not None:
+            scene_prompt = (
+                f"{scene_prompt} Weather near anchor: {weather_label}, {temperature_c}C."
+            )
+
+    if normalized_space.get("background"):
+        scene_prompt = f"{scene_prompt} Background: {normalized_space['background']}."
+    if normalized_space.get("scenery_note"):
+        scene_prompt = f"{scene_prompt} Scenery: {normalized_space['scenery_note']}."
+
+    return {
+        "command": "spacetime_snapshot",
+        "time_model": "timestamp_first",
+        "timezone": timezone_name,
+        "date_basis": date_basis,
+        "locale": locale_tag,
+        "input_payload": input_payload,
+        "instant": timeline_result["instant"],
+        "bridge_date_gregorian": timeline_result["bridge_date_gregorian"],
+        "temporal_context": temporal_context,
+        "space": normalized_space,
+        "subject": normalized_subject,
+        "timeline": {
+            "calendar_projection": timeline_result["calendar_projection"],
+            "warnings": timeline_result["warnings"],
+        },
+        "day_profile": {
+            "calendar_details": day_profile.get("calendar_details"),
+            "astro": day_profile.get("astro") if include_astro else None,
+            "metaphysics": day_profile.get("metaphysics") if include_metaphysics else None,
+            "warnings": day_profile.get("warnings", []),
+        },
+        "weather_context": weather_context,
+        "world_context": {
+            "scene_prompt": scene_prompt,
+            "agent_guidance": [
+                "Treat `instant.timestamp` as the canonical event anchor.",
+                "Use `timeline.calendar_projection` for cross-calendar rendering.",
+                "Persist `space` and `subject` as continuity defaults unless overridden by user.",
+            ],
+        },
+        "warnings": sorted(
+            set(
+                list(warnings)
+                + list(timeline_result.get("warnings", []))
+                + list(day_profile.get("warnings", []))
+                + list(weather_warnings)
+                + (weather_context.get("warnings", []) if weather_context else [])
             )
         ),
     }

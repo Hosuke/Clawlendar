@@ -20,6 +20,7 @@ from clawlendar.bridge import (
     run_convert,
     run_day_profile,
     run_life_context,
+    run_spacetime_snapshot,
     run_timeline,
     run_weather_at_time,
     run_weather_now,
@@ -248,6 +249,62 @@ def parse_args() -> argparse.Namespace:
         default="en",
         help="Locale tag",
     )
+
+    spacetime_snapshot = sub.add_parser(
+        "spacetime-snapshot",
+        help="One-call agent context: timeline + day profile + weather + scene prompt",
+    )
+    spacetime_snapshot.add_argument(
+        "--input-json",
+        required=True,
+        help="JSON object with timestamp/timestamp_ms/iso_datetime/local_datetime",
+    )
+    spacetime_snapshot.add_argument(
+        "--timezone",
+        default="UTC",
+        help="IANA timezone",
+    )
+    spacetime_snapshot.add_argument(
+        "--date-basis",
+        choices=["local", "utc"],
+        default="local",
+        help="Choose local or UTC date basis",
+    )
+    spacetime_snapshot.add_argument(
+        "--location-json",
+        required=False,
+        help="Optional JSON object for location payload",
+    )
+    spacetime_snapshot.add_argument(
+        "--subject-json",
+        required=False,
+        help="Optional JSON object for subject payload",
+    )
+    spacetime_snapshot.add_argument(
+        "--targets",
+        required=False,
+        help="Optional comma-separated timeline targets",
+    )
+    spacetime_snapshot.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag",
+    )
+    spacetime_snapshot.add_argument(
+        "--no-astro",
+        action="store_true",
+        help="Disable astro in snapshot day_profile",
+    )
+    spacetime_snapshot.add_argument(
+        "--no-metaphysics",
+        action="store_true",
+        help="Disable metaphysics in snapshot day_profile",
+    )
+    spacetime_snapshot.add_argument(
+        "--no-weather",
+        action="store_true",
+        help="Disable weather in snapshot output",
+    )
     return parser.parse_args()
 
 
@@ -413,6 +470,47 @@ def main() -> int:
                 location_payload=location_payload,
                 timezone_name=args.timezone,
                 locale=args.locale,
+            )
+        elif args.command == "spacetime-snapshot":
+            try:
+                input_payload = json.loads(args.input_json)
+                if not isinstance(input_payload, dict):
+                    raise CalendarError("--input-json must be a JSON object")
+            except json.JSONDecodeError as exc:
+                raise CalendarError(f"Invalid JSON in --input-json: {exc}") from exc
+
+            location_payload = None
+            if args.location_json:
+                try:
+                    location_payload = json.loads(args.location_json)
+                    if not isinstance(location_payload, dict):
+                        raise CalendarError("--location-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --location-json: {exc}") from exc
+
+            subject_payload = None
+            if args.subject_json:
+                try:
+                    subject_payload = json.loads(args.subject_json)
+                    if not isinstance(subject_payload, dict):
+                        raise CalendarError("--subject-json must be a JSON object")
+                except json.JSONDecodeError as exc:
+                    raise CalendarError(f"Invalid JSON in --subject-json: {exc}") from exc
+
+            targets = normalize_targets(args.targets) if args.targets else None
+            output = run_spacetime_snapshot(
+                registry=registry,
+                warnings=warnings,
+                input_payload=input_payload,
+                timezone_name=args.timezone,
+                date_basis=args.date_basis,
+                location_payload=location_payload,
+                subject_payload=subject_payload,
+                targets=targets,
+                locale=args.locale,
+                include_astro=not bool(args.no_astro),
+                include_metaphysics=not bool(args.no_metaphysics),
+                include_weather=not bool(args.no_weather),
             )
         else:
             raise CalendarError(f"Unsupported command: {args.command}")

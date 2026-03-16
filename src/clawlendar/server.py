@@ -21,6 +21,7 @@ from clawlendar.bridge import (
     run_convert,
     run_day_profile,
     run_life_context,
+    run_spacetime_snapshot,
     run_timeline,
     run_weather_at_time,
     run_weather_now,
@@ -265,6 +266,40 @@ def weather_at_time(
             location_payload=location_payload,
             timezone_name=timezone,
             locale=locale,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
+
+
+@mcp.tool(title="Spacetime Snapshot", annotations=READ_ONLY_TOOL)
+def spacetime_snapshot(
+    input_payload: Dict[str, Any],
+    timezone: str = "UTC",
+    date_basis: str = "local",
+    location_payload: Optional[Dict[str, Any]] = None,
+    subject_payload: Optional[Dict[str, Any]] = None,
+    targets: Optional[List[str]] = None,
+    locale: str = "en",
+    include_astro: bool = True,
+    include_metaphysics: bool = True,
+    include_weather: bool = True,
+) -> str:
+    """Return one-call agent context with timeline/day-profile/weather/scene prompt."""
+    try:
+        result = run_spacetime_snapshot(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            input_payload=input_payload,
+            timezone_name=timezone,
+            date_basis=date_basis,
+            location_payload=location_payload,
+            subject_payload=subject_payload,
+            targets=targets,
+            locale=locale,
+            include_astro=include_astro,
+            include_metaphysics=include_metaphysics,
+            include_weather=include_weather,
         )
         return json.dumps(result, ensure_ascii=False, indent=2)
     except CalendarError as exc:

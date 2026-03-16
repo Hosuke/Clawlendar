@@ -136,6 +136,28 @@ Clawlendar is JSON-first by design. MCP tools return structured JSON that agents
   - `weather.requested_time_local`
   - `weather.time_delta_minutes`
 
+## spacetime_snapshot
+
+- Purpose: one-call agent context for a specific instant and place.
+- Input:
+  - `input_payload` (`timestamp` | `timestamp_ms` | `iso_datetime` | `local_datetime`)
+  - `timezone`
+  - `date_basis` (`local` | `utc`)
+  - `location_payload` (optional; include `latitude` + `longitude` to enable weather)
+  - `subject_payload` (optional)
+  - `targets` (optional timeline projection calendars)
+  - `locale`
+  - `include_astro` (bool)
+  - `include_metaphysics` (bool)
+  - `include_weather` (bool)
+- Output highlights:
+  - `instant`
+  - `timeline.calendar_projection`
+  - `day_profile.calendar_details`
+  - `day_profile.metaphysics`
+  - `weather_context.weather`
+  - `world_context.scene_prompt`
+
 ## Stability Notes
 
 - Stable machine keys are preferred; localized display fields are additive.

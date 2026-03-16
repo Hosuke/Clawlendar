@@ -31,6 +31,7 @@ def test_capabilities_endpoint_includes_life_context() -> None:
     assert data["commands"]["life_context"] is True
     assert data["commands"]["weather_now"] is True
     assert data["commands"]["weather_at_time"] is True
+    assert data["commands"]["spacetime_snapshot"] is True
 
 
 def test_convert_endpoint_basic() -> None:
@@ -172,3 +173,34 @@ def test_weather_at_time_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
     data = resp.json()
     assert data["command"] == "weather_at_time"
     assert data["weather"]["time_delta_minutes"] == 15
+
+
+def test_spacetime_snapshot_endpoint(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_run_spacetime_snapshot(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return {
+            "command": "spacetime_snapshot",
+            "instant": {"iso_local": "2026-03-09T18:30:00+08:00"},
+            "weather_context": {"weather": {"weather_label": "partly_cloudy", "temperature_c": 21.2}},
+            "world_context": {"scene_prompt": "demo"},
+            "warnings": [],
+        }
+
+    monkeypatch.setattr(api_module.bridge, "run_spacetime_snapshot", fake_run_spacetime_snapshot)
+    resp = client.post(
+        "/spacetime-snapshot",
+        json={
+            "input_payload": {"iso_datetime": "2026-03-09T18:30:00+08:00"},
+            "timezone": "Asia/Taipei",
+            "date_basis": "local",
+            "location_payload": {"location_name": "Taipei", "latitude": 25.033, "longitude": 121.5654},
+            "subject_payload": {"entity_id": "lobster-001", "role": "time traveler"},
+            "locale": "en",
+            "include_astro": True,
+            "include_metaphysics": True,
+            "include_weather": True,
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["command"] == "spacetime_snapshot"
+    assert data["weather_context"]["weather"]["weather_label"] == "partly_cloudy"
