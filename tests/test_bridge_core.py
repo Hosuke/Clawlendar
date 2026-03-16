@@ -19,6 +19,7 @@ from clawlendar.bridge import (  # noqa: E402
     run_historical_resolve,
     run_historical_spacetime_snapshot,
     run_life_context,
+    run_now,
     run_spacetime_snapshot,
     run_timeline,
     run_weather_at_time,
@@ -31,6 +32,7 @@ def test_capabilities_exposes_life_context_and_i18n() -> None:
     result = run_capabilities(registry, warnings)
 
     assert result["command"] == "capabilities"
+    assert result["commands"]["now"] is True
     assert result["commands"]["life_context"] is True
     assert result["commands"]["weather_now"] is True
     assert result["commands"]["weather_at_time"] is True
@@ -56,6 +58,26 @@ def test_convert_localizes_sexagenary_for_zh_tw() -> None:
     assert payload["display"]
     assert payload["stem_label"]
     assert payload["branch_label"]
+
+
+def test_now_returns_current_projection_shape() -> None:
+    registry, warnings = make_registry()
+    result = run_now(
+        registry=registry,
+        warnings=warnings,
+        timezone_name="Asia/Taipei",
+        date_basis="local",
+        targets=["minguo", "sexagenary"],
+        locale="zh-CN",
+        include_day_profile=False,
+    )
+
+    assert result["command"] == "now"
+    assert result["timezone"] == "Asia/Taipei"
+    assert "timestamp" in result["instant"]
+    assert "local_date" in result["temporal_context"]
+    assert "minguo" in result["calendar_projection"]["results"]
+    assert "sexagenary" in result["calendar_projection"]["results"]
 
 
 def test_day_profile_includes_huangli_fields() -> None:

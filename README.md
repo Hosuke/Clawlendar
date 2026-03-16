@@ -128,10 +128,11 @@ This separation keeps integrations stable while still supporting rich user-facin
 
 ## MCP Tools
 
-Once connected, Claude has access to twelve tools:
+Once connected, Claude has access to thirteen tools:
 
 | Tool | Description |
 |------|-------------|
+| `now` | Return the current instant with local temporal context and calendar projections |
 | `capabilities` | List all supported calendars, payload schemas, and optional provider status |
 | `convert` | Convert a date from one calendar to one or more target calendars |
 | `timeline` | Normalize an instant (timestamp-first) and project into multiple calendar systems |
@@ -188,6 +189,12 @@ pip install clawlendar[metaphysics]  # Bazi + Huangli provider (lunar_python)
 
 ```bash
 pip install -e .
+
+# Current time bootstrap
+python3 scripts/calendar_bridge.py now \
+  --timezone 'Asia/Taipei' \
+  --targets minguo,sexagenary,solar_term_24 \
+  --locale zh-CN
 
 # List calendars
 python3 scripts/calendar_bridge.py capabilities
@@ -381,7 +388,7 @@ pip install -e ".[api]"
 ./scripts/run_api.sh
 ```
 
-Endpoints: `GET /health` · `GET /capabilities` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context` · `POST /weather-now` · `POST /weather-at-time` · `POST /spacetime-snapshot` · `POST /historical-resolve` · `POST /historical-spacetime-snapshot`
+Endpoints: `GET /health` · `GET /capabilities` · `GET /now` · `POST /now` · `POST /convert` · `POST /timeline` · `POST /astro` · `POST /day-profile` · `POST /calendar-month` · `POST /life-context` · `POST /weather-now` · `POST /weather-at-time` · `POST /spacetime-snapshot` · `POST /historical-resolve` · `POST /historical-spacetime-snapshot`
 
 ```bash
 # Smoke test

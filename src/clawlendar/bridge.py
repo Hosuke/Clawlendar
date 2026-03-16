@@ -1222,6 +1222,7 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
         "command": "capabilities",
         "calendars": calendars,
         "commands": {
+            "now": True,
             "convert": True,
             "timeline": True,
             "astro_snapshot": True,
@@ -1265,6 +1266,15 @@ def run_capabilities(registry: Dict[str, CalendarAdapter], warnings: List[str]) 
                 "location_for_weather": ["latitude", "longitude"],
             },
             "commands": ["spacetime_snapshot"],
+        },
+        "now": {
+            "supported": True,
+            "description": "Return the current instant with local temporal context and calendar projections.",
+            "commands": ["now"],
+            "notes": [
+                "Uses current UTC wall-clock time at request execution.",
+                "Built as a lightweight entry point for visitors and agent bootstrapping.",
+            ],
         },
         "historical_spacetime": {
             "supported": True,
@@ -1378,6 +1388,68 @@ def run_convert(
         except Exception as exc:
             result["results"][target] = {"error": str(exc)}
 
+    return result
+
+
+def run_now(
+    registry: Dict[str, CalendarAdapter],
+    warnings: List[str],
+    timezone_name: str = "UTC",
+    date_basis: str = "local",
+    targets: Optional[List[str]] = None,
+    locale: Optional[str] = None,
+    include_day_profile: bool = False,
+    include_astro: bool = False,
+    include_metaphysics: bool = True,
+) -> Dict[str, Any]:
+    if date_basis not in {"local", "utc"}:
+        raise CalendarError("date_basis must be 'local' or 'utc'")
+
+    timezone = get_timezone(timezone_name)
+    instant_utc = dt.datetime.now(tz=dt.timezone.utc)
+    input_payload = {"iso_datetime": instant_utc.isoformat()}
+    timeline_result = run_timeline(
+        registry=registry,
+        warnings=warnings,
+        input_payload=input_payload,
+        timezone_name=timezone_name,
+        date_basis=date_basis,
+        targets=targets,
+        locale=locale,
+    )
+    instant_local = instant_utc.astimezone(timezone)
+    result = {
+        "command": "now",
+        "time_model": "timestamp_first",
+        "timezone": timezone_name,
+        "date_basis": date_basis,
+        "locale": normalize_locale_tag(locale),
+        "instant": timeline_result["instant"],
+        "bridge_date_gregorian": timeline_result["bridge_date_gregorian"],
+        "temporal_context": build_temporal_context(now_local=instant_local, latitude=None),
+        "calendar_projection": timeline_result["calendar_projection"],
+        "warnings": sorted(set(list(warnings) + list(timeline_result.get("warnings", [])))),
+    }
+    if include_day_profile:
+        day_profile_result = run_day_profile(
+            registry=registry,
+            warnings=warnings,
+            input_payload=input_payload,
+            timezone_name=timezone_name,
+            date_basis=date_basis,
+            include_astro=include_astro,
+            include_metaphysics=include_metaphysics,
+            locale=locale,
+        )
+        result["day_profile"] = {
+            "calendar_details": day_profile_result.get("calendar_details"),
+            "astro": day_profile_result.get("astro") if include_astro else None,
+            "metaphysics": day_profile_result.get("metaphysics") if include_metaphysics else None,
+            "warnings": day_profile_result.get("warnings", []),
+        }
+        result["warnings"] = sorted(
+            set(list(result["warnings"]) + list(day_profile_result.get("warnings", [])))
+        )
     return result
 
 

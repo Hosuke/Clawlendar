@@ -28,6 +28,7 @@ def test_capabilities_endpoint_includes_life_context() -> None:
     assert resp.status_code == 200
     data = resp.json()
     assert data["command"] == "capabilities"
+    assert data["commands"]["now"] is True
     assert data["commands"]["life_context"] is True
     assert data["commands"]["weather_now"] is True
     assert data["commands"]["weather_at_time"] is True
@@ -51,6 +52,16 @@ def test_convert_endpoint_basic() -> None:
     assert data["command"] == "convert"
     assert "minguo" in data["results"]
     assert "iso_week" in data["results"]
+
+
+def test_now_endpoint_basic() -> None:
+    resp = client.get("/now", params={"timezone": "Asia/Taipei", "locale": "zh-CN"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["command"] == "now"
+    assert data["timezone"] == "Asia/Taipei"
+    assert "instant" in data
+    assert "calendar_projection" in data
 
 
 def test_calendar_month_endpoint_minguo() -> None:

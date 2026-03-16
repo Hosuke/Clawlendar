@@ -2,6 +2,24 @@
 
 Clawlendar is JSON-first by design. MCP tools return structured JSON that agents can parse deterministically.
 
+## now
+
+- Purpose: lightweight bootstrap for "what time is it now?" with cross-calendar projection.
+- Input:
+  - `timezone`
+  - `date_basis` (`local` | `utc`)
+  - `targets` (optional)
+  - `locale`
+  - `include_day_profile` (bool)
+  - `include_astro` (bool; only when day_profile is enabled)
+  - `include_metaphysics` (bool; only when day_profile is enabled)
+- Output highlights:
+  - `instant`
+  - `bridge_date_gregorian`
+  - `temporal_context`
+  - `calendar_projection`
+  - optional `day_profile`
+
 ## capabilities
 
 - Purpose: discover calendars, commands, locale support, and optional provider status.

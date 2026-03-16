@@ -52,6 +52,19 @@ class TimelineRequest(BaseModel):
     locale: str = Field(default="en", description="Locale tag for localized labels (e.g. zh-CN, zh-TW)")
 
 
+class NowRequest(BaseModel):
+    timezone: str = Field(default="UTC", description="IANA timezone")
+    date_basis: str = Field(default="local", description="'local' or 'utc'")
+    targets: Optional[List[str]] = Field(
+        default=None,
+        description="Optional targets. Default projects all date calendars except gregorian/unix_epoch.",
+    )
+    locale: str = Field(default="en", description="Locale tag")
+    include_day_profile: bool = Field(default=False, description="Attach day_profile block")
+    include_astro: bool = Field(default=False, description="Include astro when day_profile is enabled")
+    include_metaphysics: bool = Field(default=True, description="Include metaphysics when day_profile is enabled")
+
+
 class AstroRequest(BaseModel):
     input_payload: Dict[str, Any] = Field(
         ...,
@@ -203,6 +216,53 @@ def health() -> Dict[str, str]:
 @app.get("/capabilities")
 def capabilities() -> Dict[str, Any]:
     return bridge.run_capabilities(REGISTRY, WARNINGS)
+
+
+@app.get("/now")
+def now(
+    timezone: str = "UTC",
+    date_basis: str = "local",
+    locale: str = "en",
+    include_day_profile: bool = False,
+    include_astro: bool = False,
+    include_metaphysics: bool = True,
+) -> Dict[str, Any]:
+    if date_basis not in {"local", "utc"}:
+        raise HTTPException(status_code=400, detail="date_basis must be 'local' or 'utc'")
+    try:
+        return bridge.run_now(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            timezone_name=timezone,
+            date_basis=date_basis,
+            targets=None,
+            locale=locale,
+            include_day_profile=include_day_profile,
+            include_astro=include_astro,
+            include_metaphysics=include_metaphysics,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/now")
+def now_post(payload: NowRequest) -> Dict[str, Any]:
+    if payload.date_basis not in {"local", "utc"}:
+        raise HTTPException(status_code=400, detail="date_basis must be 'local' or 'utc'")
+    try:
+        return bridge.run_now(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            timezone_name=payload.timezone,
+            date_basis=payload.date_basis,
+            targets=payload.targets,
+            locale=payload.locale,
+            include_day_profile=payload.include_day_profile,
+            include_astro=payload.include_astro,
+            include_metaphysics=payload.include_metaphysics,
+        )
+    except bridge.CalendarError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/convert")

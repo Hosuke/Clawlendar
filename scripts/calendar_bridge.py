@@ -14,6 +14,7 @@ from clawlendar.bridge import (
     CalendarError,
     make_registry,
     normalize_targets,
+    run_now,
     run_historical_resolve,
     run_historical_spacetime_snapshot,
     run_calendar_month,
@@ -34,6 +35,47 @@ def parse_args() -> argparse.Namespace:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("capabilities", help="List available calendars and payload schemas")
+
+    now = sub.add_parser(
+        "now",
+        help="Return the current instant with local temporal context and calendar projections",
+    )
+    now.add_argument(
+        "--timezone",
+        default="UTC",
+        help="IANA timezone for output (default: UTC)",
+    )
+    now.add_argument(
+        "--date-basis",
+        choices=["local", "utc"],
+        default="local",
+        help="Choose local or UTC date basis for projection",
+    )
+    now.add_argument(
+        "--targets",
+        required=False,
+        help="Optional comma-separated target calendars",
+    )
+    now.add_argument(
+        "--locale",
+        default="en",
+        help="Locale tag",
+    )
+    now.add_argument(
+        "--include-day-profile",
+        action="store_true",
+        help="Attach day_profile block",
+    )
+    now.add_argument(
+        "--include-astro",
+        action="store_true",
+        help="Include astro if day_profile is enabled",
+    )
+    now.add_argument(
+        "--no-metaphysics",
+        action="store_true",
+        help="Disable metaphysics if day_profile is enabled",
+    )
 
     convert = sub.add_parser("convert", help="Convert one source calendar payload into target calendars")
     convert.add_argument("--source", required=True, help="Source calendar name")
@@ -387,6 +429,19 @@ def main() -> int:
     try:
         if args.command == "capabilities":
             output = run_capabilities(registry, warnings)
+        elif args.command == "now":
+            targets = normalize_targets(args.targets) if args.targets else None
+            output = run_now(
+                registry=registry,
+                warnings=warnings,
+                timezone_name=args.timezone,
+                date_basis=args.date_basis,
+                targets=targets,
+                locale=args.locale,
+                include_day_profile=bool(args.include_day_profile),
+                include_astro=bool(args.include_astro),
+                include_metaphysics=not bool(args.no_metaphysics),
+            )
         elif args.command == "convert":
             targets = normalize_targets(args.targets)
             try:

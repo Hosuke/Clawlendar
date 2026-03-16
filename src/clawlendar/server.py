@@ -17,6 +17,7 @@ from clawlendar.bridge import (
     run_historical_resolve,
     run_historical_spacetime_snapshot,
     make_registry,
+    run_now,
     run_calendar_month,
     run_astro_snapshot,
     run_capabilities,
@@ -54,6 +55,34 @@ def capabilities() -> str:
     """
     result = run_capabilities(REGISTRY, WARNINGS)
     return json.dumps(result, ensure_ascii=False, indent=2)
+
+
+@mcp.tool(title="Now", annotations=READ_ONLY_TOOL)
+def now(
+    timezone: str = "UTC",
+    date_basis: str = "local",
+    targets: Optional[List[str]] = None,
+    locale: str = "en",
+    include_day_profile: bool = False,
+    include_astro: bool = False,
+    include_metaphysics: bool = True,
+) -> str:
+    """Return the current instant with local temporal context and calendar projections."""
+    try:
+        result = run_now(
+            registry=REGISTRY,
+            warnings=WARNINGS,
+            timezone_name=timezone,
+            date_basis=date_basis,
+            targets=targets,
+            locale=locale,
+            include_day_profile=include_day_profile,
+            include_astro=include_astro,
+            include_metaphysics=include_metaphysics,
+        )
+        return json.dumps(result, ensure_ascii=False, indent=2)
+    except CalendarError as exc:
+        return json.dumps({"error": str(exc)}, ensure_ascii=False, indent=2)
 
 
 @mcp.tool(title="Convert Calendar Date", annotations=READ_ONLY_TOOL)
